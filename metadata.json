@@ -1,0 +1,6 @@
+{
+  "name": "E.M. Safety — Consulenze e Formazioni",
+  "description": "Sicurezza e formazione al fianco della tua impresa. Servizi di consulenza D.Lgs. 81/08, sistemi ISO, RSPP, antincendio e catalogo corsi.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

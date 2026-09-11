@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 180" width="100%" height="100%" fill="none">
+  <!-- EM Monogram Top Left -->
+  <g stroke="currentColor" stroke-width="5" stroke-linecap="square">
+    <!-- E: 3 horizontal bars -->
+    <line x1="10" y1="20" x2="65" y2="20" />
+    <line x1="10" y1="50" x2="65" y2="50" />
+    <line x1="10" y1="80" x2="65" y2="80" />
+
+    <!-- M: architectural lines with central V -->
+    <polyline points="80,82 80,18 115,70 150,18 150,82" stroke-linejoin="miter" stroke-miterlimit="10" />
+  </g>
+
+  <!-- Consulenze e Formazioni text -->
+  <text x="170" y="60" fill="currentColor" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-size="20" font-weight="300" letter-spacing="0.02em">
+    Consulenze e Formazioni
+  </text>
+
+  <!-- Safety stylized lower typography -->
+  <g stroke="currentColor" stroke-width="4.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- S -->
+    <path d="M 32,112 C 24,106 12,114 12,124 C 12,135 34,136 34,147 C 34,158 20,163 12,156" />
+    <!-- a -->
+    <circle cx="60" cy="138" r="14" />
+    <line x1="74" y1="124" x2="74" y2="152" />
+    <!-- f -->
+    <path d="M 100,110 C 95,110 91,114 91,120 L 91,152" />
+    <line x1="84" y1="128" x2="98" y2="128" />
+    <!-- e -->
+    <path d="M 115,138 L 138,138 C 138,126 127,124 126,124 C 115,124 114,134 114,140 C 114,149 123,153 136,151" />
+    <!-- t -->
+    <line x1="154" y1="114" x2="154" y2="150" />
+    <path d="M 154,150 C 154,153 157,153 162,153" />
+    <line x1="147" y1="125" x2="162" y2="125" />
+    <!-- y -->
+    <polyline points="175,125 186,150 197,125" />
+    <line x1="186" y1="150" x2="180" y2="165" />
+  </g>
+</svg>
