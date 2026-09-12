@@ -33,6 +33,7 @@ import {
   Eye,
   EyeOff,
   Building2,
+  Newspaper,
 } from 'lucide-react';
 import {
   useAdminStore,
@@ -41,9 +42,10 @@ import {
   setAdminAuthStatus,
 } from '../../utils/adminStore';
 import { useSiteImages, DEFAULT_SITE_IMAGES, SiteImages } from '../../utils/imageStore';
-import { Course, CalendarEvent, AdminLead, AdminLeadStatus, SafetyStory } from '../../types';
+import { Course, CalendarEvent, AdminLead, AdminLeadStatus, SafetyStory, ContentItem } from '../../types';
 import { Logo } from '../Logo';
 import { ImageUploadField } from './ImageUploadField';
+import { ContentManagementTab } from './ContentManagementTab';
 
 interface AdminDashboardModalProps {
   isOpen: boolean;
@@ -64,6 +66,9 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
     calendarEvents,
     leads,
     stories,
+    contentItems,
+    articles,
+    blogs,
     updateSiteInfo,
     addCourse,
     updateCourse,
@@ -73,6 +78,10 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
     deleteCalendarEvent,
     updateLeadStatus,
     deleteLead,
+    addContentItem,
+    updateContentItem,
+    deleteContentItem,
+    toggleContentFeatured,
     addStory,
     updateStory,
     deleteStory,
@@ -101,32 +110,6 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
       setActiveTab(initialTab);
     }
   }, [initialTab, isOpen]);
-
-  // Story Form state
-  const [editingStory, setEditingStory] = useState<SafetyStory | null>(null);
-  const [isAddingStory, setIsAddingStory] = useState(false);
-  const [storySearch, setStorySearch] = useState('');
-  const [storySectorFilter, setStorySectorFilter] = useState<string>('all');
-  const [storyForm, setStoryForm] = useState<Partial<SafetyStory>>({
-    title: '',
-    subtitle: '',
-    clientCompany: '',
-    sector: 'Metalmeccanica',
-    location: 'Treviso (TV)',
-    year: '2024 - 2026',
-    metric: '0 Infortuni',
-    metricLabel: 'negli ultimi 3 anni',
-    summary: '',
-    challenge: '',
-    solution: '',
-    results: '',
-    quote: '',
-    authorName: '',
-    authorRole: '',
-    badge: 'Caso Certificato',
-    imageUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=1000&q=80',
-    featuredOnHome: true,
-  });
 
   // Course Form Modal state
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
@@ -276,48 +259,6 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
 
     setIsAddingEvent(false);
     setEditingEvent(null);
-  };
-
-  // Safety Story Save
-  const handleSaveStory = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!storyForm.title || !storyForm.clientCompany) {
-      alert('Inserisci almeno Titolo del caso studio e Azienda cliente.');
-      return;
-    }
-
-    if (editingStory) {
-      updateStory({
-        ...editingStory,
-        ...(storyForm as SafetyStory),
-      });
-      showNotification(`Storia aziendale di "${storyForm.clientCompany}" aggiornata con successo!`);
-    } else {
-      addStory({
-        title: storyForm.title || 'Nuovo Caso Studio',
-        subtitle: storyForm.subtitle || '',
-        clientCompany: storyForm.clientCompany || 'Azienda Cliente',
-        sector: storyForm.sector || 'Metalmeccanica & Manifattura',
-        location: storyForm.location || 'Treviso (TV)',
-        year: storyForm.year || '2024 - 2026',
-        metric: storyForm.metric || '0 Infortuni',
-        metricLabel: storyForm.metricLabel || 'negli ultimi 3 anni',
-        summary: storyForm.summary || '',
-        challenge: storyForm.challenge || '',
-        solution: storyForm.solution || '',
-        results: storyForm.results || '',
-        quote: storyForm.quote || '',
-        authorName: storyForm.authorName || '',
-        authorRole: storyForm.authorRole || '',
-        badge: storyForm.badge || 'Caso Reale Certificato',
-        imageUrl: storyForm.imageUrl || 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=1000&q=80',
-        featuredOnHome: storyForm.featuredOnHome !== false,
-      });
-      showNotification('Nuova storia aziendale pubblicata con successo! Ora è visibile sulla Home Page.');
-    }
-
-    setIsAddingStory(false);
-    setEditingStory(null);
   };
 
   // Site Info Save
@@ -606,11 +547,11 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                 }`}
               >
                 <span className="flex items-center gap-2.5">
-                  <Award className="w-4 h-4 shrink-0 text-orange-400" />
-                  <span>Storie & Casi Reali</span>
+                  <Newspaper className="w-4 h-4 shrink-0 text-orange-400" />
+                  <span>Storie, Blog & Articoli</span>
                 </span>
                 <span className="px-1.5 py-0.5 rounded text-[10px] bg-slate-700 text-slate-200 font-bold">
-                  {stories.length}
+                  {contentItems.length}
                 </span>
               </button>
 
@@ -714,14 +655,14 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                       className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs hover:border-orange-500 cursor-pointer transition-all"
                     >
                       <div className="flex items-center justify-between text-slate-500 mb-2">
-                        <span className="text-[11px] font-bold uppercase tracking-wider">Storie & Casi</span>
+                        <span className="text-[11px] font-bold uppercase tracking-wider">Storie, Blog & Articoli</span>
                         <Award className="w-4 h-4 text-orange-500" />
                       </div>
                       <div className="text-2xl font-bold text-[#0B192C]">
-                        {stories.length}
+                        {contentItems.length}
                       </div>
                       <span className="text-[11px] text-orange-600 font-semibold mt-1 inline-block">
-                        {stories.filter((s) => s.featuredOnHome).length} in Home &rarr;
+                        {contentItems.filter((s) => s.featuredOnHome).length} in Home &rarr;
                       </span>
                     </div>
 
@@ -772,35 +713,13 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                       <button
                         type="button"
                         onClick={() => {
-                          setEditingStory(null);
-                          setStoryForm({
-                            title: '',
-                            subtitle: '',
-                            clientCompany: '',
-                            sector: 'Metalmeccanica & Manifattura',
-                            location: 'Treviso (TV)',
-                            year: '2025 - 2026',
-                            metric: '0 Infortuni',
-                            metricLabel: 'negli ultimi 3 anni',
-                            summary: '',
-                            challenge: '',
-                            solution: '',
-                            results: '',
-                            quote: '',
-                            authorName: '',
-                            authorRole: '',
-                            badge: 'Caso Certificato',
-                            imageUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=1000&q=80',
-                            featuredOnHome: true,
-                          });
-                          setIsAddingStory(true);
                           setActiveTab('storie');
                         }}
                         className="p-3 bg-orange-600/20 hover:bg-orange-600/30 border border-orange-500/40 rounded-xl text-xs font-bold text-left flex items-center justify-between group transition-colors cursor-pointer text-orange-200"
                       >
                         <span className="flex items-center gap-1.5">
-                          <Award className="w-3.5 h-3.5 text-orange-400" />
-                          <span>+ Nuova Storia di Successo</span>
+                          <Newspaper className="w-3.5 h-3.5 text-orange-400" />
+                          <span>+ Nuovo Contenuto (Storia, Blog, Articolo)</span>
                         </span>
                         <ArrowRight className="w-3.5 h-3.5 text-orange-400 group-hover:translate-x-1 transition-transform" />
                       </button>
@@ -1749,569 +1668,19 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                 </div>
               )}
 
-              {/* TAB 4.5: GESTIONE STORIE & CASI REALI (HOMEPAGE SYNC) */}
+              {/* TAB 4.5: GESTIONE CONTENUTI: STORIE, BLOG & ARTICOLI */}
               {activeTab === 'storie' && (
-                <div className="space-y-6">
-                  {/* TAB HEADER */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-xl font-bold text-[#0B192C]">
-                          Storie Aziendali & Casi di Successo
-                        </h3>
-                        <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-orange-100 text-orange-800 border border-orange-200">
-                          {stories.length} Casi
-                        </span>
-                      </div>
-                      <p className="text-xs sm:text-sm text-slate-600 mt-0.5">
-                        Gestisci le storie e i casi studio reali sul campo. Le storie contrassegnate come <strong className="text-emerald-700 font-bold">"In Primo Piano"</strong> compaiono all'istante sulla Home Page.
-                      </p>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setEditingStory(null);
-                        setStoryForm({
-                          title: '',
-                          subtitle: '',
-                          clientCompany: '',
-                          sector: 'Metalmeccanica & Manifattura',
-                          location: 'Treviso (TV)',
-                          year: '2025 - 2026',
-                          metric: '0 Infortuni',
-                          metricLabel: 'negli ultimi 3 anni su 240 addetti',
-                          summary: '',
-                          challenge: '',
-                          solution: '',
-                          results: '',
-                          quote: '',
-                          authorName: '',
-                          authorRole: '',
-                          badge: 'Caso Certificato',
-                          imageUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=1000&q=80',
-                          featuredOnHome: true,
-                        });
-                        setIsAddingStory(true);
-                      }}
-                      className="px-4 py-2 rounded-xl bg-[#0A66C2] hover:bg-[#084e96] text-white text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition-colors cursor-pointer"
-                    >
-                      <Plus className="w-4 h-4" />
-                      <span>+ Nuova Storia di Successo</span>
-                    </button>
-                  </div>
-
-                  {/* FORM MODAL / EXPANDED INLINE FORM */}
-                  {isAddingStory && (
-                    <div className="bg-gradient-to-br from-blue-50/60 to-white rounded-2xl border-2 border-[#0A66C2]/40 p-5 sm:p-6 shadow-sm space-y-4">
-                      <div className="flex items-center justify-between border-b border-blue-200 pb-3">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-lg bg-[#0A66C2] text-white flex items-center justify-center font-bold">
-                            <Award className="w-4 h-4" />
-                          </div>
-                          <div>
-                            <h4 className="text-sm font-bold text-[#0B192C]">
-                              {editingStory ? `Modifica Storia: "${editingStory.clientCompany}"` : 'Pubblica Nuova Storia di Successo Aziendale'}
-                            </h4>
-                            <p className="text-[11px] text-slate-500">
-                              Compila i dettagli del caso studio. Comparirà direttamente nella sezione della Home Page.
-                            </p>
-                          </div>
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setIsAddingStory(false);
-                            setEditingStory(null);
-                          }}
-                          className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/50"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-
-                      <form onSubmit={handleSaveStory} className="space-y-4">
-                        {/* RIGA 1: Titolo e Sottotitolo */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1">
-                              Titolo Caso Studio *
-                            </label>
-                            <input
-                              type="text"
-                              required
-                              value={storyForm.title || ''}
-                              onChange={(e) => setStoryForm({ ...storyForm, title: e.target.value })}
-                              placeholder="es. Zero Infortuni & Bonifica Rischi Saldatura"
-                              className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs font-medium focus:ring-2 focus:ring-[#0A66C2] focus:border-transparent"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1">
-                              Sottotitolo / Ambito di Intervento
-                            </label>
-                            <input
-                              type="text"
-                              value={storyForm.subtitle || ''}
-                              onChange={(e) => setStoryForm({ ...storyForm, subtitle: e.target.value })}
-                              placeholder="es. Riorganizzazione 3 stabilimenti con 180 lavoratori"
-                              className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs font-medium focus:ring-2 focus:ring-[#0A66C2] focus:border-transparent"
-                            />
-                          </div>
-                        </div>
-
-                        {/* RIGA 2: Azienda Cliente, Settore, Sede, Anno */}
-                        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-                          <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1">
-                              Azienda Cliente *
-                            </label>
-                            <input
-                              type="text"
-                              required
-                              value={storyForm.clientCompany || ''}
-                              onChange={(e) => setStoryForm({ ...storyForm, clientCompany: e.target.value })}
-                              placeholder="es. Gruppo Manifatturiero Veneto"
-                              className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs font-medium focus:ring-2 focus:ring-[#0A66C2] focus:border-transparent"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1">
-                              Settore Produttivo
-                            </label>
-                            <input
-                              type="text"
-                              value={storyForm.sector || ''}
-                              onChange={(e) => setStoryForm({ ...storyForm, sector: e.target.value })}
-                              placeholder="es. Metalmeccanica, Logistica, Chimico..."
-                              className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs font-medium focus:ring-2 focus:ring-[#0A66C2] focus:border-transparent"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1">
-                              Città / Sede
-                            </label>
-                            <input
-                              type="text"
-                              value={storyForm.location || ''}
-                              onChange={(e) => setStoryForm({ ...storyForm, location: e.target.value })}
-                              placeholder="es. Treviso (TV) o Milano"
-                              className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs font-medium"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1">
-                              Anno / Periodo
-                            </label>
-                            <input
-                              type="text"
-                              value={storyForm.year || ''}
-                              onChange={(e) => setStoryForm({ ...storyForm, year: e.target.value })}
-                              placeholder="es. 2024 - 2026"
-                              className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs font-medium"
-                            />
-                          </div>
-                        </div>
-
-                        {/* RIGA 3: Metrica d'impatto e Badge */}
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                          <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1">
-                              Metrica in Evidenza (Grande) *
-                            </label>
-                            <input
-                              type="text"
-                              value={storyForm.metric || ''}
-                              onChange={(e) => setStoryForm({ ...storyForm, metric: e.target.value })}
-                              placeholder="es. 0 Infortuni / -28% Premio INAIL"
-                              className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs font-bold text-[#0A66C2]"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1">
-                              Didascalia Metrica
-                            </label>
-                            <input
-                              type="text"
-                              value={storyForm.metricLabel || ''}
-                              onChange={(e) => setStoryForm({ ...storyForm, metricLabel: e.target.value })}
-                              placeholder="es. negli ultimi 3 anni su 240 addetti"
-                              className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs font-medium"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1">
-                              Badge / Certificazione
-                            </label>
-                            <input
-                              type="text"
-                              value={storyForm.badge || ''}
-                              onChange={(e) => setStoryForm({ ...storyForm, badge: e.target.value })}
-                              placeholder="es. ISO 45001 • Audit SPISAL 100%"
-                              className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs font-medium"
-                            />
-                          </div>
-                        </div>
-
-                        {/* RIGA 4: Sintesi per la Card */}
-                        <div>
-                          <label className="block text-xs font-bold text-slate-700 mb-1">
-                            Sintesi Breve (visibile nella card in Home Page) *
-                          </label>
-                          <textarea
-                            rows={2}
-                            required
-                            value={storyForm.summary || ''}
-                            onChange={(e) => setStoryForm({ ...storyForm, summary: e.target.value })}
-                            placeholder="Descrivi brevemente l'intervento e l'impatto generato per l'azienda cliente..."
-                            className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs font-medium"
-                          />
-                        </div>
-
-                        {/* RIGA 5: Dettagli Trittico: Sfida, Soluzione, Risultati */}
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                          <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1 text-rose-800">
-                              La Sfida / Rischio Iniziale
-                            </label>
-                            <textarea
-                              rows={3}
-                              value={storyForm.challenge || ''}
-                              onChange={(e) => setStoryForm({ ...storyForm, challenge: e.target.value })}
-                              placeholder="Cosa rischiava l'azienda prima del nostro intervento? (es. Sanzioni, verifiche SPISAL, infortuni ricorrenti...)"
-                              className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs font-medium"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1 text-[#0A66C2]">
-                              L'Intervento di E.M. Safety
-                            </label>
-                            <textarea
-                              rows={3}
-                              value={storyForm.solution || ''}
-                              onChange={(e) => setStoryForm({ ...storyForm, solution: e.target.value })}
-                              placeholder="Come abbiamo operato? (es. Audit integrato, revisione DVR, affiancamento RSPP, piano formativo mirato...)"
-                              className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs font-medium"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1 text-emerald-800">
-                              I Risultati Concreti Ottenuti
-                            </label>
-                            <textarea
-                              rows={3}
-                              value={storyForm.results || ''}
-                              onChange={(e) => setStoryForm({ ...storyForm, results: e.target.value })}
-                              placeholder="Cosa ha ottenuto il cliente? (es. Zero infortuni, sgravio INAIL OT23, conformità penale garantita...)"
-                              className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs font-medium"
-                            />
-                          </div>
-                        </div>
-
-                        {/* RIGA 6: Testimonianza e Referente */}
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                          <div className="sm:col-span-2">
-                            <label className="block text-xs font-bold text-slate-700 mb-1">
-                              Citazione Testimonianza del Cliente (facoltativa)
-                            </label>
-                            <input
-                              type="text"
-                              value={storyForm.quote || ''}
-                              onChange={(e) => setStoryForm({ ...storyForm, quote: e.target.value })}
-                              placeholder='es. "Con E.M. Safety abbiamo finalmente eliminato l&apos;ansia dei controlli e coinvolto tutta la squadra."'
-                              className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs font-medium italic"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1">
-                              Autore & Ruolo
-                            </label>
-                            <input
-                              type="text"
-                              value={storyForm.authorName ? `${storyForm.authorName} - ${storyForm.authorRole || ''}` : ''}
-                              onChange={(e) => {
-                                const parts = e.target.value.split('-');
-                                setStoryForm({
-                                  ...storyForm,
-                                  authorName: parts[0]?.trim() || '',
-                                  authorRole: parts[1]?.trim() || '',
-                                });
-                              }}
-                              placeholder="es. Ing. Roberto N. - Direttore Tecnico"
-                              className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs font-medium"
-                            />
-                          </div>
-                        </div>
-
-                        {/* RIGA 7: Immagine e Toggle Home Page */}
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-center bg-white p-3 rounded-xl border border-slate-200">
-                          <div className="sm:col-span-2">
-                            <label className="block text-xs font-bold text-slate-700 mb-1">
-                              URL Immagine di Copertina (Unsplash o CDN)
-                            </label>
-                            <input
-                              type="url"
-                              value={storyForm.imageUrl || ''}
-                              onChange={(e) => setStoryForm({ ...storyForm, imageUrl: e.target.value })}
-                              placeholder="https://images.unsplash.com/..."
-                              className="w-full px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-medium font-mono"
-                            />
-                          </div>
-
-                          <div className="pt-2">
-                            <label className="flex items-center gap-2.5 cursor-pointer select-none">
-                              <input
-                                type="checkbox"
-                                checked={storyForm.featuredOnHome !== false}
-                                onChange={(e) => setStoryForm({ ...storyForm, featuredOnHome: e.target.checked })}
-                                className="w-4 h-4 text-[#0A66C2] rounded border-slate-300 focus:ring-[#0A66C2]"
-                              />
-                              <div>
-                                <span className="text-xs font-bold text-[#0B192C] block">
-                                  Mostra in Primo Piano
-                                </span>
-                                <span className="text-[10px] text-slate-500">
-                                  Visibile direttamente in Home Page
-                                </span>
-                              </div>
-                            </label>
-                          </div>
-                        </div>
-
-                        {/* BOTTONI FORM */}
-                        <div className="flex justify-end gap-2 pt-2 border-t border-slate-200">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setIsAddingStory(false);
-                              setEditingStory(null);
-                            }}
-                            className="px-4 py-2 rounded-lg border border-slate-300 text-xs font-bold text-slate-700 hover:bg-slate-100 transition-colors"
-                          >
-                            Annulla
-                          </button>
-
-                          <button
-                            type="submit"
-                            className="px-6 py-2 rounded-lg bg-[#0A66C2] hover:bg-[#084e96] text-white text-xs font-bold shadow-sm transition-colors cursor-pointer flex items-center gap-1.5"
-                          >
-                            <Save className="w-4 h-4" />
-                            <span>{editingStory ? 'Aggiorna Caso Studio' : 'Pubblica Storia sul Sito'}</span>
-                          </button>
-                        </div>
-                      </form>
-                    </div>
-                  )}
-
-                  {/* SEARCH AND FILTER TOOLBAR */}
-                  <div className="flex flex-col sm:flex-row gap-2.5 bg-white p-3 rounded-xl border border-slate-200">
-                    <div className="relative flex-1">
-                      <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
-                      <input
-                        type="text"
-                        value={storySearch}
-                        onChange={(e) => setStorySearch(e.target.value)}
-                        placeholder="Cerca storia per azienda, titolo, settore o parola chiave..."
-                        className="w-full pl-9 pr-3 py-1.5 rounded-lg border border-slate-200 text-xs focus:ring-2 focus:ring-[#0A66C2] focus:border-transparent"
-                      />
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <Filter className="w-4 h-4 text-slate-400" />
-                      <select
-                        value={storySectorFilter}
-                        onChange={(e) => setStorySectorFilter(e.target.value)}
-                        className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-700 bg-white"
-                      >
-                        <option value="all">Tutti i Settori ({stories.length})</option>
-                        {Array.from(new Set(stories.map((s) => s.sector))).map((sec) => (
-                          <option key={sec} value={sec}>
-                            {sec}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* STORIE LIST / CARDS */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {stories
-                      .filter((s) => {
-                        const q = storySearch.toLowerCase();
-                        const matchesQ =
-                          !q ||
-                          s.title.toLowerCase().includes(q) ||
-                          s.clientCompany.toLowerCase().includes(q) ||
-                          s.sector.toLowerCase().includes(q) ||
-                          s.summary.toLowerCase().includes(q);
-                        const matchesSec = storySectorFilter === 'all' || s.sector === storySectorFilter;
-                        return matchesQ && matchesSec;
-                      })
-                      .map((story) => (
-                        <div
-                          key={story.id}
-                          className={`bg-white rounded-2xl border transition-all p-5 shadow-xs flex flex-col justify-between ${
-                            story.featuredOnHome
-                              ? 'border-blue-200 ring-1 ring-blue-100'
-                              : 'border-slate-200 opacity-90'
-                          }`}
-                        >
-                          <div>
-                            {/* Top row: Sector, Home status pill, actions */}
-                            <div className="flex items-center justify-between gap-2 mb-2.5">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-100 text-slate-700">
-                                  {story.sector}
-                                </span>
-                                <span className="text-[10px] text-slate-400">
-                                  {story.location} • {story.year}
-                                </span>
-                              </div>
-
-                              <div className="flex items-center gap-1.5">
-                                {/* Instant Toggle for Home visibility */}
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    toggleStoryFeatured(story.id);
-                                    showNotification(
-                                      story.featuredOnHome
-                                        ? `Storia "${story.clientCompany}" rimossa dalla Home Page.`
-                                        : `Storia "${story.clientCompany}" ora in primo piano sulla Home Page!`
-                                    );
-                                  }}
-                                  className={`flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-bold transition-colors cursor-pointer ${
-                                    story.featuredOnHome
-                                      ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'
-                                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                                  }`}
-                                  title="Clicca per mostrare o nascondere dalla Home Page"
-                                >
-                                  {story.featuredOnHome ? (
-                                    <>
-                                      <Eye className="w-3 h-3 text-emerald-700" />
-                                      <span>In Home</span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <EyeOff className="w-3 h-3 text-slate-500" />
-                                      <span>Nascosta</span>
-                                    </>
-                                  )}
-                                </button>
-
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setEditingStory(story);
-                                    setStoryForm({ ...story });
-                                    setIsAddingStory(true);
-                                  }}
-                                  className="p-1.5 rounded-md hover:bg-blue-50 text-blue-600 transition-colors"
-                                  title="Modifica storia"
-                                >
-                                  <Edit3 className="w-3.5 h-3.5" />
-                                </button>
-
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    if (confirm(`Eliminare la storia aziendale di "${story.clientCompany}"?`)) {
-                                      deleteStory(story.id);
-                                      showNotification('Storia rimossa con successo.');
-                                    }
-                                  }}
-                                  className="p-1.5 rounded-md hover:bg-rose-50 text-rose-600 transition-colors"
-                                  title="Elimina storia"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                              </div>
-                            </div>
-
-                            {/* Company & Title */}
-                            <div className="flex items-center gap-1.5 text-xs font-bold text-[#0A66C2] mb-1">
-                              <Building2 className="w-3.5 h-3.5 text-orange-500" />
-                              <span>{story.clientCompany}</span>
-                              {story.badge && (
-                                <span className="text-[10px] font-semibold bg-blue-50 text-[#0A66C2] px-1.5 py-0.2 rounded border border-blue-100 ml-auto">
-                                  {story.badge}
-                                </span>
-                              )}
-                            </div>
-
-                            <h4 className="text-sm font-bold text-[#0B192C] leading-snug mb-2">
-                              {story.title}
-                            </h4>
-
-                            {/* Highlight Metric block */}
-                            <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-2.5 mb-3 flex items-center justify-between">
-                              <div>
-                                <span className="text-base font-extrabold text-[#0B192C]">
-                                  {story.metric}
-                                </span>
-                                <span className="text-[11px] text-slate-600 block">
-                                  {story.metricLabel}
-                                </span>
-                              </div>
-                              <Award className="w-6 h-6 text-orange-400 shrink-0" />
-                            </div>
-
-                            {/* Summary */}
-                            <p className="text-xs text-slate-600 line-clamp-2 mb-3">
-                              {story.summary}
-                            </p>
-
-                            {/* Quote snippet if any */}
-                            {story.quote && (
-                              <blockquote className="text-[11px] italic text-slate-700 bg-amber-50/70 border-l-2 border-amber-400 p-2 rounded-r-lg mb-2">
-                                "{story.quote}"
-                                {story.authorName && (
-                                  <span className="block not-italic font-bold text-[10px] text-slate-800 mt-1">
-                                    — {story.authorName} {story.authorRole && `(${story.authorRole})`}
-                                  </span>
-                                )}
-                              </blockquote>
-                            )}
-                          </div>
-
-                          <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400">
-                            <span>ID: {story.id}</span>
-                            <span>{story.featuredOnHome ? '✓ Visibile in Home' : 'Nascosta dalla Home'}</span>
-                          </div>
-                        </div>
-                      ))}
-                  </div>
-
-                  {stories.length === 0 && (
-                    <div className="text-center py-12 bg-white rounded-2xl border border-slate-200 p-6">
-                      <Award className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                      <h4 className="text-sm font-bold text-slate-800">Nessuna storia aziendale presente</h4>
-                      <p className="text-xs text-slate-500 max-w-md mx-auto mt-1 mb-4">
-                        Aggiungi la prima storia di successo aziendale per mostrarla nella sezione dedicata della Home Page.
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsAddingStory(true);
-                        }}
-                        className="px-4 py-2 rounded-xl bg-[#0A66C2] text-white text-xs font-bold"
-                      >
-                        + Aggiungi la Prima Storia
-                      </button>
-                    </div>
-                  )}
-                </div>
+                <ContentManagementTab
+                  contentItems={contentItems}
+                  stories={stories}
+                  articles={articles}
+                  blogs={blogs}
+                  addContentItem={addContentItem}
+                  updateContentItem={updateContentItem}
+                  deleteContentItem={deleteContentItem}
+                  toggleContentFeatured={toggleContentFeatured}
+                  showNotification={showNotification}
+                />
               )}
 
               {/* TAB 5: LEADS CRM INBOX */}

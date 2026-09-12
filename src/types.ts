@@ -1,25 +1,48 @@
 export type PageType = 'home' | 'story' | 'about' | 'services' | 'courses' | 'partner' | 'careers' | 'testimonials' | 'contact';
 
-export interface SafetyStory {
+export type ContentType = 'story' | 'blog' | 'article';
+
+export interface ContentItem {
   id: string;
+  type?: ContentType; // 'story' | 'blog' | 'article'
   title: string;
   subtitle?: string;
+  category?: string; // e.g., 'D.Lgs. 81/08', 'ISO 45001', 'Cantieri', 'INAIL OT23', 'Formazione'
+  summary: string; // Brief executive summary or teaser
+  content?: string; // Full body content (paragraphs, headings, recommendations)
+  authorName?: string;
+  authorRole?: string;
+  publishedAt?: string;
+  readTime?: string;
+  badge?: string;
+  imageUrl?: string;
+  featuredOnHome: boolean;
+  tags?: string[];
+
+  // Story / Case-Study specific fields
+  clientCompany?: string;
+  sector?: string;
+  location?: string;
+  year?: string;
+  metric?: string;
+  metricLabel?: string;
+  challenge?: string;
+  solution?: string;
+  results?: string;
+  quote?: string;
+  createdAt?: string;
+}
+
+export interface SafetyStory extends ContentItem {
   clientCompany: string;
   sector: string;
   location: string;
   year: string;
-  metric: string; // e.g., "Zero Infortuni in 3 anni", "-28% Premio INAIL OT23", "100% Audit Superati"
+  metric: string;
   metricLabel: string;
-  summary: string;
   challenge: string;
   solution: string;
   results: string;
-  quote?: string;
-  authorName?: string;
-  authorRole?: string;
-  badge?: string;
-  imageUrl?: string;
-  featuredOnHome: boolean;
   createdAt: string;
 }
 

@@ -28,6 +28,17 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 30);
+    };
+
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     setIsAdminLoggedIn(getAdminAuthStatus());
@@ -38,10 +49,26 @@ export const Navbar: React.FC<NavbarProps> = ({
     onNavigate(page, targetElementId);
   };
 
+  const navItems: Array<{ id: PageType; label: string; elementId?: string }> = [
+    { id: 'home', label: 'Home' },
+    { id: 'about', label: 'Chi siamo' },
+    { id: 'services', label: 'Servizi' },
+    { id: 'courses', label: 'Corsi' },
+    { id: 'courses', label: 'Calendario', elementId: 'calendario-corsi' },
+    { id: 'home', label: 'Approfondimenti', elementId: 'simulatore-sanzioni' },
+    { id: 'contact', label: 'Contatti' },
+  ];
+
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/90 transition-all shadow-xs">
-      {/* Top Corporate Strip with Locations & Direct Contact */}
-      <div className="bg-[#0B192C] text-slate-300 text-[11px] py-1.5 px-4 border-b border-[#1E3E62]">
+    <header className={`sticky top-0 z-40 bg-white/98 backdrop-blur-md border-b border-slate-200/90 transition-all duration-300 ${
+      isScrolled ? 'shadow-md' : 'shadow-xs'
+    }`}>
+      {/* Top Corporate Strip with Locations & Direct Contact - hidden on scroll */}
+      <div className={`bg-[#0B192C] text-slate-300 text-[11px] px-4 border-[#1E3E62] transition-all duration-300 ease-in-out ${
+        isScrolled
+          ? 'max-h-0 opacity-0 overflow-hidden py-0 border-b-0 pointer-events-none'
+          : 'max-h-16 opacity-100 py-1.5 border-b'
+      }`}>
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-4 text-xs font-medium">
             <span className="flex items-center gap-1.5 text-slate-200">
@@ -94,9 +121,11 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Main Brand & Action Header */}
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between py-2 sm:py-3.5 gap-2 sm:gap-4">
-          {/* Brand Logo, vertical pipe, and Slogan - Proportionally sized and fully visible on all mobile screens */}
-          <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+        <div className={`flex items-center justify-between gap-2 sm:gap-4 transition-all duration-300 ${
+          isScrolled ? 'py-1.5 sm:py-2' : 'py-2 sm:py-3.5'
+        }`}>
+          {/* Brand Logo, vertical pipe, and Slogan */}
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0 shrink-0">
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -106,149 +135,133 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               <Logo
                 variant="dark"
-                size="xl"
-                className="h-[46px] min-[380px]:h-[52px] sm:h-[68px] md:h-[76px] lg:h-[82px] w-auto max-w-[175px] min-[380px]:max-w-[210px] sm:max-w-none transition-all duration-150"
+                size={isScrolled ? "sm" : "xl"}
+                className={`transition-all duration-300 ${
+                  isScrolled
+                    ? 'h-[36px] min-[380px]:h-[40px] sm:h-[44px] md:h-[46px] w-auto max-w-[150px] min-[380px]:max-w-[180px] sm:max-w-none'
+                    : 'h-[46px] min-[380px]:h-[52px] sm:h-[68px] md:h-[76px] lg:h-[82px] w-auto max-w-[175px] min-[380px]:max-w-[210px] sm:max-w-none'
+                }`}
               />
             </motion.button>
 
-            {/* Vertical Pipe separator */}
-            <span className="hidden md:inline-block text-slate-300 font-light text-3xl select-none" aria-hidden="true">
-              |
-            </span>
-
-            {/* Slogan matching requirement */}
-            <div className="hidden md:flex flex-col justify-center select-none">
-              <span className="font-sans text-sm sm:text-[15px] text-slate-800 font-normal tracking-wide leading-snug">
-                Costruiamo Sistemi che
+            {/* Slogan - smoothly hidden when scrolled */}
+            <div className={`hidden md:flex items-center gap-2 sm:gap-4 transition-all duration-300 overflow-hidden ${
+              isScrolled ? 'max-w-0 opacity-0 pointer-events-none' : 'max-w-md opacity-100'
+            }`}>
+              <span className="text-slate-300 font-light text-3xl select-none" aria-hidden="true">
+                |
               </span>
-              <span className="font-sans text-sm sm:text-[15px] text-slate-700 font-normal tracking-wide leading-snug">
-                trasformano la compliance
-              </span>
-              <span className="font-sans text-sm sm:text-[15px] text-[#1B4332] font-bold tracking-wide leading-snug">
-                in Valore aggiunto
-              </span>
+              <div className="flex flex-col justify-center select-none whitespace-nowrap">
+                <span className="font-sans text-xs lg:text-[14px] text-slate-800 font-normal tracking-wide leading-snug">
+                  Costruiamo Sistemi che
+                </span>
+                <span className="font-sans text-xs lg:text-[14px] text-slate-700 font-normal tracking-wide leading-snug">
+                  trasformano la compliance
+                </span>
+                <span className="font-sans text-xs lg:text-[14px] text-[#1B4332] font-bold tracking-wide leading-snug">
+                  in Valore aggiunto
+                </span>
+              </div>
             </div>
           </div>
 
-          {/* Action CTAs */}
+          {/* Desktop Navigation Menu Buttons - Shown inline when scrolled */}
+          {isScrolled && (
+            <nav className="hidden lg:flex items-center justify-end gap-1.5 xl:gap-2 text-[13px] xl:text-[14px] font-medium text-slate-700 transition-all duration-300 animate-in fade-in ml-auto">
+              {navItems.map((item) => {
+                const isActive = !item.elementId && activePage === item.id;
+                return (
+                  <button
+                    key={`scrolled-${item.id}-${item.label}`}
+                    onClick={() => handleNavClick(item.id, item.elementId)}
+                    className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
+                      isActive
+                        ? 'text-[#1B4332] font-bold bg-emerald-50 border border-emerald-200/80 shadow-2xs'
+                        : 'hover:text-[#1B4332] hover:bg-slate-100/80'
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                );
+              })}
+            </nav>
+          )}
+
+          {/* Action CTAs - hidden on scroll on desktop so only logo and menu buttons appear */}
           <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
-            {/* Area Clienti */}
-            <motion.button
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={onOpenAreaClienti}
-              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-[#0B192C] bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg transition-colors cursor-pointer shadow-2xs touch-manipulation"
-            >
-              <Shield className="w-3.5 h-3.5 text-[#1B4332]" />
-              <span>Area Clienti</span>
-              <span className="px-1.5 py-0.5 text-[9px] font-extrabold bg-[#0B192C] text-white rounded">
-                CLOUD
-              </span>
-            </motion.button>
+            {/* Area Clienti - shown when !isScrolled on desktop */}
+            {!isScrolled && (
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={onOpenAreaClienti}
+                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-[#0B192C] bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg transition-colors cursor-pointer shadow-2xs touch-manipulation"
+              >
+                <Shield className="w-3.5 h-3.5 text-[#1B4332]" />
+                <span>Area Clienti</span>
+                <span className="px-1.5 py-0.5 text-[9px] font-extrabold bg-[#0B192C] text-white rounded">
+                  CLOUD
+                </span>
+              </motion.button>
+            )}
 
-            {/* Richiedi una consulenza Primary Button - Compact on small mobile to give logo full visibility */}
-            <motion.button
-              whileHover={{ scale: 1.03, y: -1 }}
-              whileTap={{ scale: 0.96 }}
-              onClick={onOpenQuote}
-              className="inline-flex items-center gap-1.5 px-2.5 sm:px-4 py-2 sm:py-2.5 text-xs font-bold uppercase tracking-wider text-white bg-[#1B4332] hover:bg-[#143326] active:bg-[#0f271d] rounded-lg shadow-sm hover:shadow transition-all cursor-pointer whitespace-nowrap touch-manipulation min-h-[44px]"
-            >
-              <span className="hidden sm:inline">Richiedi una consulenza</span>
-              <span className="sm:hidden text-[11px]">Consulenza</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </motion.button>
+            {/* Richiedi una consulenza Primary Button - shown only when not scrolled */}
+            {!isScrolled && (
+              <motion.button
+                whileHover={{ scale: 1.03, y: -1 }}
+                whileTap={{ scale: 0.96 }}
+                onClick={onOpenQuote}
+                className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-white bg-[#1B4332] hover:bg-[#143326] active:bg-[#0f271d] rounded-lg shadow-sm hover:shadow transition-all cursor-pointer whitespace-nowrap touch-manipulation px-2.5 sm:px-4 py-2 sm:py-2.5 min-h-[44px]"
+              >
+                <span className="hidden sm:inline">Richiedi una consulenza</span>
+                <span className="sm:hidden text-[11px]">Consulenza</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </motion.button>
+            )}
 
-            {/* Mobile menu toggle button optimized for touch interactions */}
+            {/* Mobile menu toggle button */}
             <motion.button
               whileTap={{ scale: 0.90 }}
               onClick={() => setMobileMenuOpen((prev) => !prev)}
-              className="lg:hidden min-w-[44px] min-h-[44px] w-11 h-11 flex items-center justify-center rounded-xl text-slate-800 hover:text-[#1B4332] bg-slate-100/90 hover:bg-slate-200/90 active:bg-slate-200 border border-slate-200/90 focus:outline-none focus:ring-2 focus:ring-[#1B4332]/30 cursor-pointer touch-manipulation transition-all select-none shadow-2xs"
+              className="lg:hidden min-w-[38px] min-h-[38px] w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl text-slate-800 hover:text-[#1B4332] bg-slate-100/90 hover:bg-slate-200/90 active:bg-slate-200 border border-slate-200/90 focus:outline-none focus:ring-2 focus:ring-[#1B4332]/30 cursor-pointer touch-manipulation transition-all select-none shadow-2xs"
               aria-label={mobileMenuOpen ? "Chiudi menu di navigazione" : "Apri menu di navigazione"}
               aria-expanded={mobileMenuOpen}
               aria-controls="mobile-navigation-drawer"
             >
               {mobileMenuOpen ? (
-                <X className="w-6 h-6 text-[#1B4332] transition-transform duration-200 rotate-90" />
+                <X className="w-5 h-5 sm:w-6 sm:h-6 text-[#1B4332] transition-transform duration-200 rotate-90" />
               ) : (
-                <Menu className="w-6 h-6 text-slate-800 transition-transform duration-200" />
+                <Menu className="w-5 h-5 sm:w-6 sm:h-6 text-slate-800 transition-transform duration-200" />
               )}
             </motion.button>
           </div>
         </div>
       </div>
 
-      {/* Dedicated Desktop Navigation Bar: Full-width track preventing any menu wrap or glitch */}
-      <div className="hidden lg:block bg-slate-50/90 border-t border-slate-200/80 shadow-2xs">
+      {/* Dedicated Desktop Navigation Bar: Full-width track when at top, hidden on scroll */}
+      <div className={`hidden lg:block bg-slate-50/90 border-slate-200/80 shadow-2xs transition-all duration-300 ease-in-out ${
+        isScrolled
+          ? 'max-h-0 opacity-0 overflow-hidden py-0 border-t-0 pointer-events-none'
+          : 'max-h-16 opacity-100 py-1 border-t'
+      }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <nav className="flex items-center justify-between py-1 gap-1 text-[12px] xl:text-[13px] font-medium text-slate-700 overflow-x-auto no-scrollbar">
-            <button
-              onClick={() => handleNavClick('home')}
-              className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
-                activePage === 'home'
-                  ? 'text-[#1B4332] font-bold bg-white shadow-2xs border border-emerald-200'
-                  : 'hover:text-[#0B192C] hover:bg-white/80'
-              }`}
-            >
-              Home
-            </button>
-
-            <button
-              onClick={() => handleNavClick('about')}
-              className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
-                activePage === 'about'
-                  ? 'text-[#1B4332] font-bold bg-white shadow-2xs border border-emerald-200'
-                  : 'hover:text-[#0B192C] hover:bg-white/80'
-              }`}
-            >
-              Chi siamo
-            </button>
-
-            <button
-              onClick={() => handleNavClick('services')}
-              className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
-                activePage === 'services'
-                  ? 'text-[#1B4332] font-bold bg-white shadow-2xs border border-emerald-200'
-                  : 'hover:text-[#0B192C] hover:bg-white/80'
-              }`}
-            >
-              Servizi
-            </button>
-
-            <button
-              onClick={() => handleNavClick('courses')}
-              className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
-                activePage === 'courses'
-                  ? 'text-[#1B4332] font-bold bg-white shadow-2xs border border-emerald-200'
-                  : 'hover:text-[#0B192C] hover:bg-white/80'
-              }`}
-            >
-              Corsi
-            </button>
-
-            <button
-              onClick={() => handleNavClick('courses', 'calendario-corsi')}
-              className="px-3 py-1.5 rounded-lg hover:text-[#0B192C] hover:bg-white/80 transition-colors cursor-pointer font-medium text-slate-700 whitespace-nowrap shrink-0"
-            >
-              Calendario
-            </button>
-
-            <button
-              onClick={() => handleNavClick('home', 'simulatore-sanzioni')}
-              className="px-3 py-1.5 rounded-lg hover:text-[#0B192C] hover:bg-white/80 transition-colors cursor-pointer font-medium text-slate-700 whitespace-nowrap shrink-0"
-            >
-              Approfondimenti
-            </button>
-
-            <button
-              onClick={() => handleNavClick('contact')}
-              className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
-                activePage === 'contact'
-                  ? 'text-[#1B4332] font-bold bg-white shadow-2xs border border-emerald-200'
-                  : 'hover:text-[#0B192C] hover:bg-white/80'
-              }`}
-            >
-              Contatti
-            </button>
+            {navItems.map((item) => {
+              const isActive = !item.elementId && activePage === item.id;
+              return (
+                <button
+                  key={`top-${item.id}-${item.label}`}
+                  onClick={() => handleNavClick(item.id, item.elementId)}
+                  className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
+                    isActive
+                      ? 'text-[#1B4332] font-bold bg-white shadow-2xs border border-emerald-200'
+                      : 'hover:text-[#0B192C] hover:bg-white/80'
+                  }`}
+                >
+                  {item.label}
+                </button>
+              );
+            })}
 
             <div className="flex items-center gap-1.5 shrink-0 ml-auto">
               <button
@@ -266,8 +279,12 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       </div>
 
-      {/* Mobile Slogan Banner: Dedicated, prominent, and readable on mobile devices */}
-      <div className="md:hidden bg-gradient-to-r from-slate-50 via-emerald-50/40 to-slate-50 border-t border-b border-slate-200/90 px-4 py-2 text-center shadow-xs">
+      {/* Mobile Slogan Banner: Dedicated, hidden on scroll */}
+      <div className={`md:hidden bg-gradient-to-r from-slate-50 via-emerald-50/40 to-slate-50 border-slate-200/90 text-center shadow-xs transition-all duration-300 ease-in-out ${
+        isScrolled
+          ? 'max-h-0 opacity-0 overflow-hidden py-0 border-t-0 border-b-0 pointer-events-none'
+          : 'max-h-16 opacity-100 px-4 py-2 border-t border-b'
+      }`}>
         <p className="text-xs font-semibold text-slate-800 tracking-tight leading-snug">
           Costruiamo Sistemi che trasformano la compliance in{' '}
           <span className="text-[#1B4332] font-bold">Valore aggiunto</span>
