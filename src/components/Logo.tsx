@@ -3,7 +3,7 @@ import { getStoredImages } from '../utils/imageStore';
 
 interface LogoProps {
   variant?: 'light' | 'dark';
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
   showSubtitle?: boolean;
   className?: string;
   customLogoUrl?: string;
@@ -16,27 +16,32 @@ export const Logo: React.FC<LogoProps> = ({
   className = '',
   customLogoUrl,
 }) => {
-  const isDark = variant === 'dark'; // dark logo on light bg
-  const mainColor = isDark ? '#000000' : '#FFFFFF';
-  const subtitleColor = isDark ? '#1F2937' : '#E2E8F0';
+  const isLight = variant === 'light'; // light logo for dark backgrounds
+  const mainColor = isLight ? '#FFFFFF' : '#0B192C';
+  const accentColor = isLight ? '#60A5FA' : '#0A66C2';
+  const subtitleColor = isLight ? '#93C5FD' : '#334155';
 
   // If admin has set a custom image URL or there's a stored one, use that image
   const effectiveLogoUrl = customLogoUrl || getStoredImages().headerLogoUrl;
 
-  const dimensions = {
-    sm: { height: 48, width: 175 },
-    md: { height: 62, width: 230 },
-    lg: { height: 76, width: 285 },
+  // Responsive default height classes based on size
+  // On mobile phone, size is deliberately boosted for prominence
+  const defaultSizeClass = {
+    sm: 'h-[46px] sm:h-[52px]',
+    md: 'h-[56px] sm:h-[64px]',
+    lg: 'h-[64px] sm:h-[74px] md:h-[80px]',
+    xl: 'h-[74px] sm:h-[84px] md:h-[92px]',
   }[size];
+
+  const appliedClass = className.includes('h-') ? className : `${defaultSizeClass} ${className}`;
 
   if (effectiveLogoUrl) {
     return (
-      <div className={`inline-flex items-center select-none ${className}`}>
+      <div className={`inline-flex items-center select-none ${appliedClass}`}>
         <img
           src={effectiveLogoUrl}
           alt="E.M. Safety Logo"
-          style={{ height: `${dimensions.height}px`, width: 'auto' }}
-          className="object-contain"
+          className="h-full w-auto object-contain max-w-full"
         />
       </div>
     );
@@ -44,18 +49,19 @@ export const Logo: React.FC<LogoProps> = ({
 
   return (
     <div
-      className={`inline-flex items-center select-none transition-transform ${className}`}
-      style={{ height: `${dimensions.height}px` }}
+      className={`inline-flex items-center select-none transition-transform ${appliedClass}`}
+      role="img"
+      aria-label="E.M. Safety - Consulenze e Formazioni"
     >
       <svg
         viewBox="0 0 460 180"
-        style={{ height: `${dimensions.height}px`, width: 'auto' }}
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className="shrink-0 overflow-visible"
+        className="h-full w-auto overflow-visible select-none drop-shadow-xs"
+        style={{ aspectRatio: '460 / 180' }}
       >
         {/* Top Part: E and M */}
-        <g stroke={mainColor} strokeWidth="5.5" strokeLinecap="square">
+        <g stroke={mainColor} strokeWidth="6" strokeLinecap="square">
           {/* E: 3 parallel horizontal lines */}
           <line x1="12" y1="22" x2="68" y2="22" />
           <line x1="12" y1="52" x2="68" y2="52" />
@@ -72,13 +78,13 @@ export const Logo: React.FC<LogoProps> = ({
         {/* Top Right: Consulenze e Formazioni */}
         {showSubtitle && (
           <text
-            x="176"
+            x="174"
             y="64"
             fill={subtitleColor}
             fontFamily="'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
             fontSize="26"
-            fontWeight="400"
-            letterSpacing="0.01em"
+            fontWeight="500"
+            letterSpacing="0.02em"
           >
             Consulenze e Formazioni
           </text>
@@ -86,8 +92,8 @@ export const Logo: React.FC<LogoProps> = ({
 
         {/* Bottom Part: "Safety" stylized with precise cut letterforms */}
         <g
-          stroke={mainColor}
-          strokeWidth="5"
+          stroke={accentColor}
+          strokeWidth="5.5"
           fill="none"
           strokeLinecap="round"
           strokeLinejoin="round"

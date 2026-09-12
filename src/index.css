@@ -21,6 +21,35 @@
   font-family: 'Cinzel', serif;
 }
 
+/* Responsive Smooth Motion for every button and interactive control */
+button,
+[role="button"],
+input[type="submit"],
+input[type="button"],
+.btn-motion {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 0.18s ease,
+              border-color 0.18s ease,
+              color 0.18s ease,
+              opacity 0.18s ease;
+  will-change: transform;
+}
+
+button:hover:not(:disabled),
+[role="button"]:hover:not([aria-disabled="true"]),
+input[type="submit"]:hover:not(:disabled),
+.btn-motion:hover {
+  transform: translateY(-1.5px);
+}
+
+button:active:not(:disabled),
+[role="button"]:active:not([aria-disabled="true"]),
+input[type="submit"]:active:not(:disabled),
+.btn-motion:active {
+  transform: translateY(0.5px) scale(0.985);
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;

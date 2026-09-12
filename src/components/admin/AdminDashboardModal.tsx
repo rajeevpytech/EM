@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   X,
   Lock,
@@ -43,17 +43,20 @@ import {
 import { useSiteImages, DEFAULT_SITE_IMAGES, SiteImages } from '../../utils/imageStore';
 import { Course, CalendarEvent, AdminLead, AdminLeadStatus, SafetyStory } from '../../types';
 import { Logo } from '../Logo';
+import { ImageUploadField } from './ImageUploadField';
 
 interface AdminDashboardModalProps {
   isOpen: boolean;
   onClose: () => void;
   onNavigateHome: () => void;
+  initialTab?: 'panoramica' | 'testi' | 'corsi' | 'calendario' | 'storie' | 'leads' | 'media' | 'backup';
 }
 
 export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   isOpen,
   onClose,
   onNavigateHome,
+  initialTab,
 }) => {
   const {
     siteInfo,
@@ -91,7 +94,13 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   // Active Tab
   const [activeTab, setActiveTab] = useState<
     'panoramica' | 'testi' | 'corsi' | 'calendario' | 'storie' | 'leads' | 'media' | 'backup'
-  >('panoramica');
+  >(initialTab || 'panoramica');
+
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab, isOpen]);
 
   // Story Form state
   const [editingStory, setEditingStory] = useState<SafetyStory | null>(null);
@@ -321,14 +330,22 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   // Image Upload helper
   const handleImageUpload = (key: keyof SiteImages, file: File | null) => {
     if (!file) return;
+    if (file.size > 12 * 1024 * 1024) {
+      showNotification('Nota: Il file supera i 12MB. Consigliamo file compressi per prestazioni ottimali.');
+    }
     const reader = new FileReader();
     reader.onload = () => {
       if (reader.result && typeof reader.result === 'string') {
         setSiteImages({ ...siteImages, [key]: reader.result });
-        showNotification('Immagine aggiornata con successo!');
+        showNotification('Nuova immagine caricata e salvata con successo sul sito!');
       }
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleResetSingleImage = (key: keyof SiteImages) => {
+    setSiteImages({ ...siteImages, [key]: DEFAULT_SITE_IMAGES[key] });
+    showNotification('Immagine ripristinata al valore predefinito.');
   };
 
   return (
@@ -2433,138 +2450,68 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
               {/* TAB 6: IMMAGINI & MEDIA */}
               {activeTab === 'media' && (
                 <div className="space-y-6">
-                  <div>
-                    <h3 className="text-xl font-bold text-[#0B192C]">
-                      Gestione Immagini & Grafica
-                    </h3>
-                    <p className="text-xs sm:text-sm text-slate-600">
-                      Modifica le slide dell'hero (Milano Gae Aulenti, Cantiere, Formazione) o imposta un logo personalizzato.
-                    </p>
+                  <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
+                    <div>
+                      <h3 className="text-xl font-bold text-[#0B192C]">
+                        Gestione Immagini & Grafica Hero
+                      </h3>
+                      <p className="text-xs sm:text-sm text-slate-600">
+                        Carica le immagini direttamente dal tuo computer con il pulsante dedicato o inserisci un URL.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        resetAllImages();
+                        showNotification('Tutte le immagini sono state ripristinate alle impostazioni predefinite!');
+                      }}
+                      className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-xl transition-colors cursor-pointer shadow-2xs"
+                      title="Ripristina tutte le immagini ai valori predefiniti"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5 text-slate-600" />
+                      <span>Ripristina Tutte le Immagini</span>
+                    </button>
                   </div>
 
                   <div className="grid grid-cols-1 gap-5">
                     {/* Slide 1 - Milan Gae Aulenti */}
-                    <div className="bg-white p-5 rounded-2xl border border-slate-200 space-y-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h4 className="text-sm font-bold text-[#0B192C]">
-                            Hero Slide 1: Presidio Direzionale Milano (Piazza Gae Aulenti)
-                          </h4>
-                          <span className="text-xs text-slate-500">
-                            Prospettiva fontana e complessi curvilinei (impostata su /hero-milan.jpg)
-                          </span>
-                        </div>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-700 uppercase">
-                          Slide Principale
-                        </span>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
-                        <div className="aspect-video bg-slate-900 rounded-xl overflow-hidden border border-slate-200">
-                          <img
-                            src={siteImages.heroSlideMilan}
-                            alt="Anteprima Slide Milano"
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <div className="sm:col-span-2 space-y-3">
-                          <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1">
-                              URL Immagine o Percorso Locale
-                            </label>
-                            <input
-                              type="text"
-                              value={siteImages.heroSlideMilan}
-                              onChange={(e) =>
-                                setSiteImages({ ...siteImages, heroSlideMilan: e.target.value })
-                              }
-                              className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs font-mono"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1">
-                              Oppure carica file dal dispositivo
-                            </label>
-                            <input
-                              type="file"
-                              accept="image/*"
-                              onChange={(e) =>
-                                handleImageUpload('heroSlideMilan', e.target.files?.[0] || null)
-                              }
-                              className="text-xs text-slate-500"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                    <ImageUploadField
+                      id="heroSlideMilan"
+                      title="Hero Slide 1: Presidio Direzionale Milano (Piazza Gae Aulenti)"
+                      subtitle="Immagine dell'hub direzionale di Milano. Clicca sul pulsante o trascina un file per caricarlo."
+                      badge="Slide Principale"
+                      value={siteImages.heroSlideMilan}
+                      defaultValue={DEFAULT_SITE_IMAGES.heroSlideMilan}
+                      onChangeUrl={(url) => setSiteImages({ ...siteImages, heroSlideMilan: url })}
+                      onUploadFile={(file) => handleImageUpload('heroSlideMilan', file)}
+                      onReset={() => handleResetSingleImage('heroSlideMilan')}
+                    />
 
                     {/* Slide 2 - Cantiere / Audit Tecnico */}
-                    <div className="bg-white p-5 rounded-2xl border border-slate-200 space-y-4">
-                      <h4 className="text-sm font-bold text-[#0B192C]">
-                        Hero Slide 2: Audit sul Campo & Cantieri Complessi
-                      </h4>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
-                        <div className="aspect-video bg-slate-900 rounded-xl overflow-hidden border border-slate-200">
-                          <img
-                            src={siteImages.heroSlideField}
-                            alt="Anteprima Slide Cantiere"
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <div className="sm:col-span-2 space-y-3">
-                          <input
-                            type="text"
-                            value={siteImages.heroSlideField}
-                            onChange={(e) =>
-                              setSiteImages({ ...siteImages, heroSlideField: e.target.value })
-                            }
-                            className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs font-mono"
-                          />
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) =>
-                              handleImageUpload('heroSlideField', e.target.files?.[0] || null)
-                            }
-                            className="text-xs text-slate-500"
-                          />
-                        </div>
-                      </div>
-                    </div>
+                    <ImageUploadField
+                      id="heroSlideField"
+                      title="Hero Slide 2: Audit sul Campo & Cantieri Complessi"
+                      subtitle="Audit tecnici, cantieri e verifiche di conformità per la sicurezza operativa."
+                      badge="Audit & Cantieri"
+                      value={siteImages.heroSlideField}
+                      defaultValue={DEFAULT_SITE_IMAGES.heroSlideField}
+                      onChangeUrl={(url) => setSiteImages({ ...siteImages, heroSlideField: url })}
+                      onUploadFile={(file) => handleImageUpload('heroSlideField', file)}
+                      onReset={() => handleResetSingleImage('heroSlideField')}
+                    />
 
                     {/* Slide 3 - Formazione Accreditata */}
-                    <div className="bg-white p-5 rounded-2xl border border-slate-200 space-y-4">
-                      <h4 className="text-sm font-bold text-[#0B192C]">
-                        Hero Slide 3: Polo Didattico & Formazione Interattiva
-                      </h4>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
-                        <div className="aspect-video bg-slate-900 rounded-xl overflow-hidden border border-slate-200">
-                          <img
-                            src={siteImages.heroSlideTraining}
-                            alt="Anteprima Slide Aula"
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <div className="sm:col-span-2 space-y-3">
-                          <input
-                            type="text"
-                            value={siteImages.heroSlideTraining}
-                            onChange={(e) =>
-                              setSiteImages({ ...siteImages, heroSlideTraining: e.target.value })
-                            }
-                            className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs font-mono"
-                          />
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) =>
-                              handleImageUpload('heroSlideTraining', e.target.files?.[0] || null)
-                            }
-                            className="text-xs text-slate-500"
-                          />
-                        </div>
-                      </div>
-                    </div>
+                    <ImageUploadField
+                      id="heroSlideTraining"
+                      title="Hero Slide 3: Polo Didattico & Formazione Interattiva"
+                      subtitle="Aule corsi accreditate, docenze qualificate e sessioni pratiche di addestramento."
+                      badge="Formazione"
+                      value={siteImages.heroSlideTraining}
+                      defaultValue={DEFAULT_SITE_IMAGES.heroSlideTraining}
+                      onChangeUrl={(url) => setSiteImages({ ...siteImages, heroSlideTraining: url })}
+                      onUploadFile={(file) => handleImageUpload('heroSlideTraining', file)}
+                      onReset={() => handleResetSingleImage('heroSlideTraining')}
+                    />
                   </div>
                 </div>
               )}

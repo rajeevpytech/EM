@@ -13,6 +13,7 @@ import { CorporateTrainingBanner } from './components/CorporateTrainingBanner';
 import { ContactSection } from './components/ContactSection';
 import { OurStorySection } from './components/OurStorySection';
 import { CustomerStoriesSection } from './components/CustomerStoriesSection';
+import { TestimonialCarousel } from './components/TestimonialCarousel';
 import { Footer } from './components/Footer';
 
 // Pages
@@ -33,6 +34,7 @@ import { CourseDetailModal } from './components/modals/CourseDetailModal';
 import { QuoteModal, CaseStudiesModal, PartnerModal, PrivacyModal } from './components/modals/AuxModals';
 import { AdminDashboardModal } from './components/admin/AdminDashboardModal';
 import { Course, CalendarEvent } from './types';
+import { ScrollSection } from './components/common/ScrollSection';
 
 export default function App() {
   const [activePage, setActivePage] = useState<PageType>('home');
@@ -45,6 +47,16 @@ export default function App() {
   const [isPartnerOpen, setIsPartnerOpen] = useState(false);
   const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
+  const [adminInitialTab, setAdminInitialTab] = useState<
+    'panoramica' | 'testi' | 'corsi' | 'calendario' | 'storie' | 'leads' | 'media' | 'backup'
+  >('panoramica');
+
+  const handleOpenAdmin = (
+    tab: 'panoramica' | 'testi' | 'corsi' | 'calendario' | 'storie' | 'leads' | 'media' | 'backup' = 'panoramica'
+  ) => {
+    setAdminInitialTab(tab);
+    setIsAdminOpen(true);
+  };
 
   const [gapAnalysisStandard, setGapAnalysisStandard] = useState<string | null>(null);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
@@ -131,7 +143,7 @@ export default function App() {
         onNavigate={handleNavigate}
         onOpenSimulatore={() => setIsSimulatoreOpen(true)}
         onOpenAreaClienti={() => setIsAreaClientiOpen(true)}
-        onOpenAdminModal={() => setIsAdminOpen(true)}
+        onOpenAdminModal={() => handleOpenAdmin('media')}
         onOpenQuote={() => {
           setQuotePrefill('');
           setIsQuoteOpen(true);
@@ -216,79 +228,109 @@ export default function App() {
             <HeroSection
               onConsultancyClick={() => handleScrollTo('contatti')}
               onCoursesClick={() => handleScrollTo('catalogo-corsi')}
+              onOpenAdminMedia={() => handleOpenAdmin('media')}
             />
 
             {/* 3. Dark forest green Ribbon & 4-Column Stats */}
-            <RibbonStats />
+            <ScrollSection>
+              <RibbonStats />
+            </ScrollSection>
 
             {/* 4. "DUE PERCORSI" - "Da dove vuoi partire?" Two large split cards */}
-            <TwoPathsSection
-              onSelectConsultancy={() => handleNavigate('services')}
-              onSelectCourses={() => handleNavigate('courses')}
-            />
+            <ScrollSection>
+              <TwoPathsSection
+                onSelectConsultancy={() => handleNavigate('services')}
+                onSelectCourses={() => handleNavigate('courses')}
+              />
+            </ScrollSection>
 
             {/* 5. "SISTEMA INTEGRATO" - "Radar di Conformità & Gestione Integrata SGI" */}
-            <RadarSGISection onRunGapAnalysis={handleOpenGapAnalysis} />
+            <ScrollSection>
+              <RadarSGISection onRunGapAnalysis={handleOpenGapAnalysis} />
+            </ScrollSection>
 
             {/* 6. "CATALOGO CORSI" - "Trova il corso giusto per te e per il tuo team" */}
-            <CourseCatalogSection
-              onSelectCourse={(course) => setSelectedCourse(course)}
-              onRequestCorporateCourse={() => {
-                setQuotePrefill('Richiesta Corso Aziendale su Misura (in azienda o aule E.M Safety)');
-                setIsQuoteOpen(true);
-              }}
-            />
+            <ScrollSection>
+              <CourseCatalogSection
+                onSelectCourse={(course) => setSelectedCourse(course)}
+                onRequestCorporateCourse={() => {
+                  setQuotePrefill('Richiesta Corso Aziendale su Misura (in azienda o aule E.M Safety)');
+                  setIsQuoteOpen(true);
+                }}
+              />
+            </ScrollSection>
 
             {/* 7. "CALENDARIO" - "Prossime edizioni in partenza" */}
-            <CalendarSection
-              onContactClick={() => handleScrollTo('contatti')}
-              onBookSeat={handleBookCalendarEvent}
-            />
+            <ScrollSection>
+              <CalendarSection
+                onContactClick={() => handleScrollTo('contatti')}
+                onBookSeat={handleBookCalendarEvent}
+              />
+            </ScrollSection>
 
             {/* 8. "CHI SIAMO" - "Un approccio concreto alla sicurezza" */}
-            <AboutSection
-              onLearnMore={() => {
-                handleNavigate('story');
-              }}
-            />
+            <ScrollSection>
+              <AboutSection
+                onLearnMore={() => {
+                  handleNavigate('story');
+                }}
+              />
+            </ScrollSection>
 
             {/* 8.05 "LA NOSTRA STORIA" - Sezione Cronistoria sul campo (1994 - 2026) */}
-            <OurStorySection
-              onExploreFullStory={() => handleNavigate('story')}
-            />
+            <ScrollSection>
+              <OurStorySection
+                onExploreFullStory={() => handleNavigate('story')}
+              />
+            </ScrollSection>
 
             {/* 8.06 "STORIE DI SUCCESSO & CASI AZIENDALI" - Gestite dal back-office admin */}
-            <CustomerStoriesSection
-              onOpenContact={() => handleNavigate('contact')}
-              onOpenQuote={() => {
-                setQuotePrefill('Richiesta Audit Preliminare da Storie di Successo');
-                setIsQuoteOpen(true);
-              }}
-              onOpenAdmin={() => setIsAdminOpen(true)}
-            />
+            <ScrollSection>
+              <CustomerStoriesSection
+                onOpenContact={() => handleNavigate('contact')}
+                onOpenQuote={() => {
+                  setQuotePrefill('Richiesta Audit Preliminare da Storie di Successo');
+                  setIsQuoteOpen(true);
+                }}
+                onOpenAdmin={() => setIsAdminOpen(true)}
+              />
+            </ScrollSection>
+
+            {/* 8.07 CAROUSEL TESTIMONIANZE CLIENTI CON ROTAZIONE AUTOMATICA */}
+            <ScrollSection>
+              <TestimonialCarousel />
+            </ScrollSection>
 
             {/* 8.1 "AFFILIAZIONI" - ANFOS, OPN ITALIA LAVORO, DAN Partner */}
-            <AffiliationsSection
-              onLearnMore={() => handleNavigate('contact')}
-            />
+            <ScrollSection>
+              <AffiliationsSection
+                onLearnMore={() => handleNavigate('contact')}
+              />
+            </ScrollSection>
 
             {/* 9. "COME FUNZIONA" - "Dalla richiesta al percorso, in tre passi" */}
-            <HowItWorksSection />
+            <ScrollSection>
+              <HowItWorksSection />
+            </ScrollSection>
 
             {/* 10. "FORMAZIONE PER AZIENDE" Banner */}
-            <CorporateTrainingBanner
-              onCorporateRequest={() => {
-                setQuotePrefill('Richiesta Formazione Aziendale dedicata');
-                setIsQuoteOpen(true);
-              }}
-              onQuoteRequest={() => {
-                setQuotePrefill('Richiesta Preventivo Generale');
-                setIsQuoteOpen(true);
-              }}
-            />
+            <ScrollSection>
+              <CorporateTrainingBanner
+                onCorporateRequest={() => {
+                  setQuotePrefill('Richiesta Formazione Aziendale dedicata');
+                  setIsQuoteOpen(true);
+                }}
+                onQuoteRequest={() => {
+                  setQuotePrefill('Richiesta Preventivo Generale');
+                  setIsQuoteOpen(true);
+                }}
+              />
+            </ScrollSection>
 
             {/* 11. "PARLIAMONE" - "Raccontaci la tua esigenza" + "Scrivici" Card Form */}
-            <ContactSection />
+            <ScrollSection>
+              <ContactSection />
+            </ScrollSection>
           </>
         )}
       </main>
@@ -366,6 +408,7 @@ export default function App() {
 
       <AdminDashboardModal
         isOpen={isAdminOpen}
+        initialTab={adminInitialTab}
         onClose={() => {
           setIsAdminOpen(false);
           if (window.location.hash.toLowerCase().includes('admin')) {
