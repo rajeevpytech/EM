@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { X, MapPin, Mail, Phone, CheckCircle2, Building, Send, Award, Users, Shield } from 'lucide-react';
+import { X, MapPin, Mail, Phone, CheckCircle2, AlertCircle, Building, Send, Award, Users, Shield, Loader2 } from 'lucide-react';
 import { useAdminStore } from '../../utils/adminStore';
+import { quoteFormSchema, QuoteFormData, validateSingleField } from '../../utils/validationSchemas';
 
 interface QuoteModalProps {
   isOpen: boolean;
@@ -10,15 +11,123 @@ interface QuoteModalProps {
 
 export const QuoteModal: React.FC<QuoteModalProps> = ({ isOpen, onClose, prefillReason }) => {
   const { addLead } = useAdminStore();
-  const [selectedCity, setSelectedCity] = useState<'treviso' | 'milano'>('treviso');
-  const [serviceType, setServiceType] = useState('Consulenza D.Lgs 81/08 & DVR');
-  const [fullName, setFullName] = useState('');
-  const [company, setCompany] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
+
+  const [formData, setFormData] = useState<QuoteFormData>({
+    selectedCity: 'treviso',
+    serviceType: 'Consulenza D.Lgs 81/08 & DVR',
+    fullName: '',
+    company: '',
+    email: '',
+    phone: '',
+    notes: '',
+    privacyAccepted: false as unknown as true,
+  });
+
+  const [errors, setErrors] = useState<Partial<Record<keyof QuoteFormData, string>>>({});
+  const [touched, setTouched] = useState<Partial<Record<keyof QuoteFormData, boolean>>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [generalError, setGeneralError] = useState('');
   const [sent, setSent] = useState(false);
 
   if (!isOpen) return null;
+
+  const handleFieldChange = <K extends keyof QuoteFormData>(
+    field: K,
+    value: QuoteFormData[K]
+  ) => {
+    const updated = { ...formData, [field]: value };
+    setFormData(updated);
+
+    if (touched[field] || errors[field]) {
+      const errorMsg = validateSingleField(
+        quoteFormSchema,
+        field,
+        value,
+        updated as Record<string, unknown>
+      );
+      setErrors((prev) => ({
+        ...prev,
+        [field]: errorMsg || undefined,
+      }));
+    }
+  };
+
+  const handleFieldBlur = (field: keyof QuoteFormData) => {
+    setTouched((prev) => ({ ...prev, [field]: true }));
+    const errorMsg = validateSingleField(
+      quoteFormSchema,
+      field,
+      formData[field],
+      formData as unknown as Record<string, unknown>
+    );
+    setErrors((prev) => ({
+      ...prev,
+      [field]: errorMsg || undefined,
+    }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const allTouched: Partial<Record<keyof QuoteFormData, boolean>> = {
+      fullName: true,
+      company: true,
+      email: true,
+      phone: true,
+      selectedCity: true,
+      serviceType: true,
+      notes: true,
+      privacyAccepted: true,
+    };
+    setTouched(allTouched);
+
+    const result = quoteFormSchema.safeParse(formData);
+
+    if (!result.success) {
+      const fieldErrors: Partial<Record<keyof QuoteFormData, string>> = {};
+      result.error.issues.forEach((issue) => {
+        const fieldName = issue.path[0] as keyof QuoteFormData;
+        if (fieldName && !fieldErrors[fieldName]) {
+          fieldErrors[fieldName] = issue.message;
+        }
+      });
+      setErrors(fieldErrors);
+      setGeneralError(result.error.issues[0]?.message || 'Verifica i campi evidenziati prima di inviare.');
+      return;
+    }
+
+    setGeneralError('');
+    setErrors({});
+    setIsSubmitting(true);
+
+    setTimeout(() => {
+      addLead({
+        fullName: formData.fullName,
+        company: formData.company,
+        email: formData.email,
+        phone: formData.phone,
+        source: 'Preventivo',
+        subject: `Preventivo ${formData.selectedCity === 'treviso' ? 'Treviso' : 'Milano'} - ${formData.serviceType}`,
+        message: [
+          prefillReason ? `Dettaglio selezionato: ${prefillReason}` : null,
+          formData.notes ? `Note aggiuntive: ${formData.notes}` : null,
+        ]
+          .filter(Boolean)
+          .join('\n'),
+      });
+      setIsSubmitting(false);
+      setSent(true);
+    }, 850);
+  };
+
+  const handleClose = () => {
+    setSent(false);
+    setIsSubmitting(false);
+    setErrors({});
+    setTouched({});
+    setGeneralError('');
+    onClose();
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
@@ -35,7 +144,10 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({ isOpen, onClose, prefill
               Sedi a Treviso e Milano. Interventi in tutto il Nord e Centro Italia.
             </p>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/10">
+          <button
+            onClick={handleClose}
+            className="p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 cursor-pointer"
+          >
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -50,43 +162,43 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({ isOpen, onClose, prefill
                 Richiesta Preventivo Ricevuta
               </h4>
               <p className="text-xs text-slate-600 max-w-sm mx-auto">
-                Il responsabile della sede di {selectedCity === 'treviso' ? 'Treviso' : 'Milano'} preparerà l'offerta tecnico-economica entro 48 ore.
+                Il responsabile della sede di {formData.selectedCity === 'treviso' ? 'Treviso' : 'Milano'} preparerà l'offerta tecnico-economica entro 48 ore.
               </p>
               <button
-                onClick={onClose}
+                onClick={handleClose}
                 className="mt-2 px-6 py-2.5 text-xs font-bold uppercase tracking-wider bg-[#0B192C] hover:bg-[#0A66C2] text-white rounded-xl transition-colors cursor-pointer"
               >
                 Chiudi
               </button>
             </div>
           ) : (
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                addLead({
-                  fullName: fullName,
-                  company: company,
-                  email: email,
-                  phone: phone,
-                  source: 'Preventivo',
-                  subject: `Preventivo ${selectedCity === 'treviso' ? 'Treviso' : 'Milano'} - ${serviceType}`,
-                  message: prefillReason ? `Dettaglio selezionato: ${prefillReason}` : undefined,
-                });
-                setSent(true);
-              }}
-              className="space-y-4"
-            >
+            <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+              {generalError && (
+                <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2 animate-in fade-in duration-200">
+                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                  <span className="font-medium">{generalError}</span>
+                </div>
+              )}
+
+              {/* Progress bar during submission */}
+              {isSubmitting && (
+                <div className="w-full bg-blue-100 rounded-full h-1 overflow-hidden">
+                  <div className="bg-[#0A66C2] h-full w-full animate-pulse transition-all duration-500" />
+                </div>
+              )}
+
               {/* Sedi selection tabs */}
-              <div>
+              <div className={isSubmitting ? 'opacity-70 pointer-events-none' : ''}>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">
-                  Seleziona Sede di Riferimento
+                  Seleziona Sede di Riferimento *
                 </label>
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
-                    onClick={() => setSelectedCity('treviso')}
+                    disabled={isSubmitting}
+                    onClick={() => handleFieldChange('selectedCity', 'treviso')}
                     className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
-                      selectedCity === 'treviso'
+                      formData.selectedCity === 'treviso'
                         ? 'border-[#0A66C2] bg-blue-50/70 ring-1 ring-[#0A66C2]'
                         : 'border-slate-200 hover:bg-slate-50'
                     }`}
@@ -102,9 +214,10 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({ isOpen, onClose, prefill
 
                   <button
                     type="button"
-                    onClick={() => setSelectedCity('milano')}
+                    disabled={isSubmitting}
+                    onClick={() => handleFieldChange('selectedCity', 'milano')}
                     className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
-                      selectedCity === 'milano'
+                      formData.selectedCity === 'milano'
                         ? 'border-[#0A66C2] bg-blue-50/70 ring-1 ring-[#0A66C2]'
                         : 'border-slate-200 hover:bg-slate-50'
                     }`}
@@ -121,14 +234,16 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({ isOpen, onClose, prefill
               </div>
 
               {/* Service Selection */}
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
-                  Tipologia di Servizio Richiesto
+              <div className={isSubmitting ? 'opacity-70 pointer-events-none' : ''}>
+                <label htmlFor="quote-serviceType" className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
+                  Tipologia di Servizio Richiesto *
                 </label>
                 <select
-                  value={serviceType}
-                  onChange={(e) => setServiceType(e.target.value)}
-                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-300 focus:outline-none focus:border-[#0A66C2]"
+                  id="quote-serviceType"
+                  disabled={isSubmitting}
+                  value={formData.serviceType}
+                  onChange={(e) => handleFieldChange('serviceType', e.target.value)}
+                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-[#0A66C2] focus:border-transparent"
                 >
                   <option>Consulenza D.Lgs 81/08 & Redazione DVR</option>
                   <option>Incarico RSPP Esterno Qualificato</option>
@@ -145,48 +260,250 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({ isOpen, onClose, prefill
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-3">
-                <input
-                  type="text"
-                  required
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="Nome e Cognome *"
-                  className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-300 focus:border-[#0A66C2] focus:outline-none"
-                />
-                <input
-                  type="text"
-                  required
-                  value={company}
-                  onChange={(e) => setCompany(e.target.value)}
-                  placeholder="Azienda / P.IVA *"
-                  className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-300 focus:border-[#0A66C2] focus:outline-none"
-                />
+              <div className={`grid grid-cols-1 sm:grid-cols-2 gap-3 ${isSubmitting ? 'opacity-70 pointer-events-none' : ''}`}>
+                {/* Nome e Cognome */}
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <label htmlFor="quote-fullName" className="text-xs font-bold text-slate-700">
+                      Nome e Cognome *
+                    </label>
+                    <span className={`text-[10px] font-mono ${formData.fullName.length > 60 ? 'text-amber-600 font-bold' : 'text-slate-400'}`}>
+                      {formData.fullName.length}/70
+                    </span>
+                  </div>
+                  <div className="relative">
+                    <input
+                      id="quote-fullName"
+                      type="text"
+                      required
+                      disabled={isSubmitting}
+                      maxLength={70}
+                      value={formData.fullName}
+                      onChange={(e) => handleFieldChange('fullName', e.target.value)}
+                      onBlur={() => handleFieldBlur('fullName')}
+                      placeholder="Mario Rossi *"
+                      className={`w-full px-3.5 py-2.5 text-xs rounded-xl border transition-all focus:outline-hidden focus:ring-2 ${
+                        errors.fullName
+                          ? 'border-rose-400 focus:ring-rose-200 bg-rose-50/20'
+                          : touched.fullName && formData.fullName.length >= 3
+                          ? 'border-emerald-500/60 focus:ring-emerald-200'
+                          : 'border-slate-300 focus:ring-[#0A66C2]'
+                      }`}
+                    />
+                    {touched.fullName && !errors.fullName && formData.fullName.length >= 3 && (
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 absolute right-3 top-3 pointer-events-none" />
+                    )}
+                  </div>
+                  {errors.fullName && (
+                    <div className="flex items-center gap-1 text-[11px] text-rose-600 mt-1 font-medium">
+                      <AlertCircle className="w-3 h-3 shrink-0" />
+                      <span>{errors.fullName}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Ragione Sociale */}
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <label htmlFor="quote-company" className="text-xs font-bold text-slate-700">
+                      Azienda / P.IVA *
+                    </label>
+                    <span className={`text-[10px] font-mono ${formData.company.length > 85 ? 'text-amber-600 font-bold' : 'text-slate-400'}`}>
+                      {formData.company.length}/100
+                    </span>
+                  </div>
+                  <div className="relative">
+                    <input
+                      id="quote-company"
+                      type="text"
+                      required
+                      disabled={isSubmitting}
+                      maxLength={100}
+                      value={formData.company}
+                      onChange={(e) => handleFieldChange('company', e.target.value)}
+                      onBlur={() => handleFieldBlur('company')}
+                      placeholder="Azienda SpA o P.IVA *"
+                      className={`w-full px-3.5 py-2.5 text-xs rounded-xl border transition-all focus:outline-hidden focus:ring-2 ${
+                        errors.company
+                          ? 'border-rose-400 focus:ring-rose-200 bg-rose-50/20'
+                          : touched.company && formData.company.length >= 2
+                          ? 'border-emerald-500/60 focus:ring-emerald-200'
+                          : 'border-slate-300 focus:ring-[#0A66C2]'
+                      }`}
+                    />
+                    {touched.company && !errors.company && formData.company.length >= 2 && (
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 absolute right-3 top-3 pointer-events-none" />
+                    )}
+                  </div>
+                  {errors.company && (
+                    <div className="flex items-center gap-1 text-[11px] text-rose-600 mt-1 font-medium">
+                      <AlertCircle className="w-3 h-3 shrink-0" />
+                      <span>{errors.company}</span>
+                    </div>
+                  )}
+                </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Email aziendale *"
-                  className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-300 focus:border-[#0A66C2] focus:outline-none"
-                />
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="Telefono per ricontatto"
-                  className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-300 focus:border-[#0A66C2] focus:outline-none"
-                />
+              <div className={`grid grid-cols-1 sm:grid-cols-2 gap-3 ${isSubmitting ? 'opacity-70 pointer-events-none' : ''}`}>
+                {/* Email Aziendale */}
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <label htmlFor="quote-email" className="text-xs font-bold text-slate-700">
+                      Email Aziendale *
+                    </label>
+                    <span className={`text-[10px] font-mono ${formData.email.length > 80 ? 'text-amber-600 font-bold' : 'text-slate-400'}`}>
+                      {formData.email.length}/100
+                    </span>
+                  </div>
+                  <div className="relative">
+                    <input
+                      id="quote-email"
+                      type="email"
+                      required
+                      disabled={isSubmitting}
+                      maxLength={100}
+                      value={formData.email}
+                      onChange={(e) => handleFieldChange('email', e.target.value)}
+                      onBlur={() => handleFieldBlur('email')}
+                      placeholder="preventivi@azienda.it *"
+                      className={`w-full px-3.5 py-2.5 text-xs rounded-xl border transition-all focus:outline-hidden focus:ring-2 ${
+                        errors.email
+                          ? 'border-rose-400 focus:ring-rose-200 bg-rose-50/20'
+                          : touched.email && !errors.email && formData.email.includes('@')
+                          ? 'border-emerald-500/60 focus:ring-emerald-200'
+                          : 'border-slate-300 focus:ring-[#0A66C2]'
+                      }`}
+                    />
+                    {touched.email && !errors.email && formData.email.includes('@') && (
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 absolute right-3 top-3 pointer-events-none" />
+                    )}
+                  </div>
+                  {errors.email && (
+                    <div className="flex items-center gap-1 text-[11px] text-rose-600 mt-1 font-medium">
+                      <AlertCircle className="w-3 h-3 shrink-0" />
+                      <span>{errors.email}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Telefono */}
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <label htmlFor="quote-phone" className="text-xs font-bold text-slate-700">
+                      Telefono per ricontatto *
+                    </label>
+                    <span className={`text-[10px] font-mono ${formData.phone.length > 15 ? 'text-amber-600 font-bold' : 'text-slate-400'}`}>
+                      {formData.phone.length}/20
+                    </span>
+                  </div>
+                  <div className="relative">
+                    <input
+                      id="quote-phone"
+                      type="tel"
+                      required
+                      disabled={isSubmitting}
+                      maxLength={20}
+                      value={formData.phone}
+                      onChange={(e) => handleFieldChange('phone', e.target.value)}
+                      onBlur={() => handleFieldBlur('phone')}
+                      placeholder="+39 333 9876543 *"
+                      className={`w-full px-3.5 py-2.5 text-xs rounded-xl border transition-all focus:outline-hidden focus:ring-2 ${
+                        errors.phone
+                          ? 'border-rose-400 focus:ring-rose-200 bg-rose-50/20'
+                          : touched.phone && !errors.phone && formData.phone.length >= 6
+                          ? 'border-emerald-500/60 focus:ring-emerald-200'
+                          : 'border-slate-300 focus:ring-[#0A66C2]'
+                      }`}
+                    />
+                    {touched.phone && !errors.phone && formData.phone.length >= 6 && (
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 absolute right-3 top-3 pointer-events-none" />
+                    )}
+                  </div>
+                  {errors.phone && (
+                    <div className="flex items-center gap-1 text-[11px] text-rose-600 mt-1 font-medium">
+                      <AlertCircle className="w-3 h-3 shrink-0" />
+                      <span>{errors.phone}</span>
+                    </div>
+                  )}
+                </div>
               </div>
 
+              {/* Note opzionali */}
+              <div className={`space-y-1 ${isSubmitting ? 'opacity-70 pointer-events-none' : ''}`}>
+                <div className="flex items-center justify-between">
+                  <label htmlFor="quote-notes" className="text-xs font-bold text-slate-700">
+                    Note aggiuntive o requisiti particolari (opzionale)
+                  </label>
+                  <span className={`text-[10px] font-mono ${(formData.notes?.length || 0) > 450 ? 'text-amber-600 font-bold' : 'text-slate-400'}`}>
+                    {formData.notes?.length || 0}/500
+                  </span>
+                </div>
+                <textarea
+                  id="quote-notes"
+                  rows={2}
+                  disabled={isSubmitting}
+                  maxLength={500}
+                  value={formData.notes}
+                  onChange={(e) => handleFieldChange('notes', e.target.value)}
+                  onBlur={() => handleFieldBlur('notes')}
+                  placeholder="Numero dipendenti, sedi operative, scadenze imminenti..."
+                  className={`w-full px-3.5 py-2 text-xs rounded-xl border resize-none focus:outline-hidden focus:ring-2 ${
+                    errors.notes
+                      ? 'border-rose-400 focus:ring-rose-200 bg-rose-50/20'
+                      : 'border-slate-300 focus:ring-[#0A66C2]'
+                  }`}
+                />
+                {errors.notes && (
+                  <div className="flex items-center gap-1 text-[11px] text-rose-600 mt-1 font-medium">
+                    <AlertCircle className="w-3 h-3 shrink-0" />
+                    <span>{errors.notes}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Privacy Consent */}
+              <div className={`pt-1 ${isSubmitting ? 'opacity-70 pointer-events-none' : ''}`}>
+                <label className="flex items-start gap-2.5 text-xs text-slate-600 cursor-pointer">
+                  <input
+                    id="quote-privacyAccepted"
+                    type="checkbox"
+                    disabled={isSubmitting}
+                    checked={formData.privacyAccepted === true}
+                    onChange={(e) => handleFieldChange('privacyAccepted', e.target.checked as true)}
+                    className={`mt-0.5 w-4 h-4 rounded text-[#0A66C2] focus:ring-[#0A66C2] cursor-pointer ${
+                      errors.privacyAccepted ? 'border-rose-400 ring-2 ring-rose-200' : 'border-slate-300'
+                    }`}
+                  />
+                  <span>
+                    Accetto il trattamento dei dati personali ai sensi del Regolamento UE 2016/679 (GDPR) per la ricezione del preventivo.*
+                  </span>
+                </label>
+                {errors.privacyAccepted && (
+                  <div className="flex items-center gap-1 text-[11px] text-rose-600 mt-1 font-medium pl-6">
+                    <AlertCircle className="w-3 h-3 shrink-0" />
+                    <span>{errors.privacyAccepted}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Submit Button with Loading State */}
               <button
+                id="quote-submit-btn"
                 type="submit"
-                className="w-full py-3 rounded-xl text-xs font-bold uppercase tracking-wider text-white bg-[#0A66C2] hover:bg-[#004182] transition-colors shadow-md cursor-pointer"
+                disabled={isSubmitting}
+                className="w-full py-3 rounded-xl text-xs font-bold uppercase tracking-wider text-white bg-[#0A66C2] hover:bg-[#004182] transition-all shadow-md cursor-pointer flex items-center justify-center gap-2 disabled:opacity-75 disabled:cursor-not-allowed"
               >
-                Invia Richiesta di Preventivo Gratuito
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin text-white" />
+                    <span>Elaborazione preventivo in corso...</span>
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-3.5 h-3.5" />
+                    <span>Invia Richiesta di Preventivo Gratuito</span>
+                  </>
+                )}
               </button>
             </form>
           )}

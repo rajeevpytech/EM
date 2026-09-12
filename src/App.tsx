@@ -7,6 +7,13 @@ import { RadarSGISection } from './components/RadarSGISection';
 import { CourseCatalogSection } from './components/CourseCatalogSection';
 import { CalendarSection } from './components/CalendarSection';
 import { AboutSection } from './components/AboutSection';
+import { IntegratedSystemsSection } from './components/IntegratedSystemsSection';
+import { ServiceArchitectureSection } from './components/ServiceArchitectureSection';
+import { FourPhaseProcessSection } from './components/FourPhaseProcessSection';
+import { PpeInspectionSection } from './components/PpeInspectionSection';
+import { SanctionsSimulatorSection } from './components/SanctionsSimulatorSection';
+import { CostOfNonComplianceSection } from './components/CostOfNonComplianceSection';
+import { PartnershipOrbitSection } from './components/PartnershipOrbitSection';
 import { AffiliationsSection } from './components/AffiliationsSection';
 import { HowItWorksSection } from './components/HowItWorksSection';
 import { CorporateTrainingBanner } from './components/CorporateTrainingBanner';
@@ -35,6 +42,8 @@ import { QuoteModal, CaseStudiesModal, PartnerModal, PrivacyModal } from './comp
 import { AdminDashboardModal } from './components/admin/AdminDashboardModal';
 import { Course, CalendarEvent } from './types';
 import { ScrollSection } from './components/common/ScrollSection';
+import { GsapHomeAtmosphere } from './components/home/GsapHomeAtmosphere';
+import { useMetadata } from './hooks/useMetadata';
 
 export default function App() {
   const [activePage, setActivePage] = useState<PageType>('home');
@@ -61,6 +70,17 @@ export default function App() {
   const [gapAnalysisStandard, setGapAnalysisStandard] = useState<string | null>(null);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [quotePrefill, setQuotePrefill] = useState<string>('');
+
+  // Dynamically update document title, OG tags, and canonical URLs for SEO indexing
+  useMetadata(
+    activePage,
+    selectedCourse
+      ? {
+          title: `${selectedCourse.title} (Cod. ${selectedCourse.code}) | Corsi D.Lgs. 81/08 — E.M. Safety`,
+          description: selectedCourse.description.slice(0, 160),
+        }
+      : undefined
+  );
 
   // Handle URL hash on initial load and popstate
   useEffect(() => {
@@ -223,7 +243,10 @@ export default function App() {
         )}
 
         {activePage === 'home' && (
-          <>
+          <div className="relative">
+            {/* Subtle, premium GSAP corporate atmosphere for E.M. Safety */}
+            <GsapHomeAtmosphere />
+
             {/* 2. Hero Section with 4-image bento grid & safety badge */}
             <HeroSection
               onConsultancyClick={() => handleScrollTo('contatti')}
@@ -231,17 +254,77 @@ export default function App() {
               onOpenAdminMedia={() => handleOpenAdmin('media')}
             />
 
-            {/* 3. Dark forest green Ribbon & 4-Column Stats */}
+            {/* 3. Dark Ribbon Ticker */}
             <ScrollSection>
               <RibbonStats />
             </ScrollSection>
 
-            {/* 4. "DUE PERCORSI" - "Da dove vuoi partire?" Two large split cards */}
+            {/* 4. "CHI SIAMO • ESPERIENZA TRENTENNALE" - Un approccio concreto alla sicurezza */}
+            <ScrollSection>
+              <AboutSection
+                onLearnMore={() => {
+                  setQuotePrefill('Richiesta Informazioni Aziendali / Approfondimento Storia E.M Safety');
+                  setIsQuoteOpen(true);
+                }}
+              />
+            </ScrollSection>
+
+            {/* 5. "ORIENTAMENTO IMMEDIATO" - "COME POSSIAMO AIUTARTI?" (Three pathways) */}
             <ScrollSection>
               <TwoPathsSection
                 onSelectConsultancy={() => handleNavigate('services')}
                 onSelectCourses={() => handleNavigate('courses')}
               />
+            </ScrollSection>
+
+            {/* 6. "METODOLOGIA E.M SAFETY" - Sistemi di Gestione Integrati (SGI 01, 02, 03, 04 + Banner) */}
+            <ScrollSection>
+              <IntegratedSystemsSection
+                onOpenConsultation={() => {
+                  setQuotePrefill('Richiesta Audit Sistemi di Gestione Integrati (SGI)');
+                  setIsQuoteOpen(true);
+                }}
+              />
+            </ScrollSection>
+
+            {/* 7. "PROCESSO OPERATIVO" - "Il nostro metodo di lavoro in 4 fasi" */}
+            <ScrollSection>
+              <FourPhaseProcessSection
+                onSelectPhaseAction={(phaseTitle) => {
+                  setQuotePrefill(`Richiesta Attivazione Metodologia: ${phaseTitle}`);
+                  setIsQuoteOpen(true);
+                }}
+              />
+            </ScrollSection>
+
+            {/* 8. "ARCHITETTURA DEI SERVIZI" - Interactive Sector Mapping (Manifattura, Cantieri, Uffici, Chimica, Logistica) */}
+            <ScrollSection>
+              <ServiceArchitectureSection
+                onSelectSectorAction={(sectorName) => {
+                  setQuotePrefill(`Richiesta Consulenza Specifica per Comparto: ${sectorName}`);
+                  setIsQuoteOpen(true);
+                }}
+              />
+            </ScrollSection>
+
+            {/* 4.4 "ISPEZIONE INTERATTIVA DPI E PRESIDI DI CAMPO" - Interactive Body & Field Diagnostic */}
+            <ScrollSection>
+              <PpeInspectionSection />
+            </ScrollSection>
+
+            {/* 4.5 "SIMULATORE OBBLIGHI, SANZIONI E SGRAVI INAIL" - Real-time Risk and OT23 Simulator */}
+            <ScrollSection>
+              <SanctionsSimulatorSection
+                onOpenConsultancyModal={(diagnosticData) => {
+                  setQuotePrefill(diagnosticData);
+                  setIsQuoteOpen(true);
+                }}
+              />
+            </ScrollSection>
+
+            {/* 4.6 "QUANTO COSTA DAVVERO UNA MANCATA CONFORMITÀ?" - Real D.Lgs 81/08 Penalties vs E.M Safety Protection */}
+            <ScrollSection>
+              <CostOfNonComplianceSection />
             </ScrollSection>
 
             {/* 5. "SISTEMA INTEGRATO" - "Radar di Conformità & Gestione Integrata SGI" */}
@@ -268,15 +351,6 @@ export default function App() {
               />
             </ScrollSection>
 
-            {/* 8. "CHI SIAMO" - "Un approccio concreto alla sicurezza" */}
-            <ScrollSection>
-              <AboutSection
-                onLearnMore={() => {
-                  handleNavigate('story');
-                }}
-              />
-            </ScrollSection>
-
             {/* 8.05 "LA NOSTRA STORIA" - Sezione Cronistoria sul campo (1994 - 2026) */}
             <ScrollSection>
               <OurStorySection
@@ -299,6 +373,11 @@ export default function App() {
             {/* 8.07 CAROUSEL TESTIMONIANZE CLIENTI CON ROTAZIONE AUTOMATICA */}
             <ScrollSection>
               <TestimonialCarousel />
+            </ScrollSection>
+
+            {/* 8.08 "MAPPA ORBITALE DELLE PARTNERSHIP STRATEGICHE" */}
+            <ScrollSection>
+              <PartnershipOrbitSection />
             </ScrollSection>
 
             {/* 8.1 "AFFILIAZIONI" - ANFOS, OPN ITALIA LAVORO, DAN Partner */}
@@ -331,7 +410,7 @@ export default function App() {
             <ScrollSection>
               <ContactSection />
             </ScrollSection>
-          </>
+          </div>
         )}
       </main>
 

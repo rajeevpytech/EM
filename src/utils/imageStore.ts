@@ -48,8 +48,8 @@ export const DEFAULT_SITE_IMAGES: SiteImages = {
   // Historic / industrial engineering evolution for Our Story
   ourStoryImage: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=1000&q=80',
 
-  // Certified safety engineers on site (fixed working URL)
-  aboutImage: 'https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?auto=format&fit=crop&w=1000&q=80',
+  // Technical CAD blueprint architectural floor plan for safety & compliance
+  aboutImage: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1000&q=80',
 
   howItWorks1: 'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=800&q=80',
   howItWorks2: 'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?auto=format&fit=crop&w=800&q=80',

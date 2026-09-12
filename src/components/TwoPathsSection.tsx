@@ -1,125 +1,119 @@
 import React from 'react';
-import { ArrowUpRight, ArrowRight } from 'lucide-react';
-import { useSiteImages } from '../utils/imageStore';
+import { ShieldCheck, GraduationCap, Clock, ArrowRight, Shield, Award, Headphones } from 'lucide-react';
+import { motion } from 'motion/react';
 
 interface TwoPathsSectionProps {
   onSelectConsultancy: () => void;
   onSelectCourses: () => void;
+  onSelectSupport?: () => void;
 }
 
 export const TwoPathsSection: React.FC<TwoPathsSectionProps> = ({
   onSelectConsultancy,
   onSelectCourses,
+  onSelectSupport,
 }) => {
-  const [siteImages] = useSiteImages();
+  const cards = [
+    {
+      id: 'consultancy',
+      badge: 'CONSULENZA DIREZIONALE',
+      icon: ShieldCheck,
+      title: 'Consulenza aziendale & Sistemi HSE',
+      description:
+        'Progettazione e mantenimento di Sistemi Qualità, Ambiente, Sicurezza (SGI). Audit ispettivi, DVR specialistici, valutazione Rischi e assunzione incarico RSPP esterno.',
+      actionLabel: 'Esplora la consulenza',
+      tag: 'D.Lgs. 81/08',
+      onClick: onSelectConsultancy,
+    },
+    {
+      id: 'courses',
+      badge: 'CENTRO ACCREDITATO',
+      icon: GraduationCap,
+      title: 'Formazione & Corsi Obbligatori',
+      description:
+        'Catalogo completo Accordo Stato-Regioni. Formazione Lavoratori (Basso, Medio, Alto rischio), Preposti, Dirigenti, RLS, Antincendio e Primo Soccorso. In aula o FAD sincrona.',
+      actionLabel: 'Vedi prossimi corsi',
+      tag: 'Attestati Validi',
+      onClick: onSelectCourses,
+    },
+    {
+      id: 'support',
+      badge: 'SCADENZIARIO & TUTELA',
+      icon: Headphones,
+      title: 'Supporto & Monitoraggio Continuo',
+      description:
+        'Un affiancamento costante per non perdere mai una scadenza formativa o di rinnovo documentale. Monitoraggio legislativo attivo con alert preventivi per il datore di lavoro.',
+      actionLabel: 'Contatta un referente',
+      tag: 'Helpdesk 24/48h',
+      onClick: onSelectSupport || onSelectConsultancy,
+    },
+  ];
 
   return (
-    <section className="py-16 sm:py-24 bg-white">
+    <section id="come-possiamo-aiutarti" className="py-16 sm:py-24 bg-white border-t border-slate-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="space-y-2 mb-10">
-          <span className="text-xs font-bold tracking-[0.2em] uppercase text-[#0A66C2]">
-            DUE PERCORSI OPERATIVI
-          </span>
-          <h2 className="font-serif-display text-3xl sm:text-4xl text-[#0B192C] font-bold tracking-tight">
-            Da dove vuoi partire?
-          </h2>
-          <p className="text-slate-600 text-sm sm:text-base max-w-xl">
-            Scegli tra percorsi di consulenza integrata su misura per la tua conformità aziendale o la formazione professionale accreditata.
-          </p>
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 sm:mb-16">
+          <div className="space-y-2 max-w-2xl">
+            <span className="text-xs font-bold tracking-[0.2em] uppercase text-[#1B4332]">
+              ORIENTAMENTO IMMEDIATO
+            </span>
+            <h2 className="font-serif-display text-3xl sm:text-4xl text-[#0B192C] font-bold tracking-tight">
+              Come possiamo aiutarti?
+            </h2>
+            <p className="text-sm sm:text-base text-slate-600 leading-relaxed pt-1">
+              Individua il percorso necessario per la tua realtà aziendale: soluzioni per Datori di Lavoro, RSPP, responsabili QHSE e direzioni HR.
+            </p>
+          </div>
         </div>
 
-        {/* Two large split cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
-          {/* Card 1: Consulenza */}
-          <div
-            onClick={onSelectConsultancy}
-            className="group relative h-[400px] sm:h-[450px] rounded-2xl overflow-hidden shadow-sm cursor-pointer border border-slate-200 transition-all duration-300 hover:shadow-2xl hover:border-[#0A66C2]/50"
-          >
-            {/* Background image */}
-            <img
-              src={siteImages.twoPathsConsultancy}
-              alt="Consulenza aziendale sicurezza"
-              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1000&q=80';
-              }}
-            />
-            {/* Dark navy gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0B192C]/95 via-[#0B192C]/50 to-black/30" />
+        {/* 3 Service Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+          {cards.map((card, index) => {
+            const Icon = card.icon;
+            return (
+              <motion.div
+                key={card.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                className="p-6 sm:p-8 rounded-2xl bg-white border border-slate-200/90 shadow-xs hover:shadow-xl hover:border-slate-300 transition-all flex flex-col justify-between group"
+              >
+                <div className="space-y-5">
+                  <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-[#0B192C] group-hover:bg-[#1B4332] group-hover:text-white group-hover:border-[#1B4332] transition-colors shadow-2xs">
+                    <Icon className="w-6 h-6" />
+                  </div>
 
-            {/* Top row: badge & arrow */}
-            <div className="absolute top-6 inset-x-6 flex items-center justify-between">
-              <span className="px-3.5 py-1 rounded-full text-xs font-bold tracking-wider uppercase bg-[#0A66C2] text-white shadow-md">
-                CONSULENZA TECNICA
-              </span>
-              <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/30 group-hover:bg-[#0A66C2] group-hover:border-[#0A66C2] group-hover:text-white transition-all">
-                <ArrowUpRight className="w-5 h-5" />
-              </div>
-            </div>
+                  <span className="inline-block text-[10px] font-extrabold tracking-wider uppercase text-slate-400">
+                    {card.badge}
+                  </span>
 
-            {/* Bottom Content */}
-            <div className="absolute bottom-6 inset-x-6 text-white space-y-2.5">
-              <span className="text-xs font-semibold text-[#70B5F9] uppercase tracking-wider">
-                D.Lgs. 81/08 • Sistemi ISO 45001 • RSPP Esterno
-              </span>
-              <h3 className="font-serif-display text-2xl sm:text-3xl font-bold">
-                Cerchi una consulenza aziendale?
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-300 line-clamp-2">
-                Audit sul campo, DVR, indagini fonometriche, valutazione rischi interferenziali e certificazione dei sistemi.
-              </p>
-              <div className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-[#70B5F9] group-hover:text-white transition-colors pt-1">
-                <span>Esplora i servizi di consulenza</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1.5 transition-transform" />
-              </div>
-            </div>
-          </div>
+                  <h3 className="text-xl font-bold text-[#0B192C] tracking-tight group-hover:text-[#1B4332] transition-colors">
+                    {card.title}
+                  </h3>
 
-          {/* Card 2: Formazione */}
-          <div
-            onClick={onSelectCourses}
-            className="group relative h-[400px] sm:h-[450px] rounded-2xl overflow-hidden shadow-sm cursor-pointer border border-slate-200 transition-all duration-300 hover:shadow-2xl hover:border-[#0A66C2]/50"
-          >
-            {/* Background image */}
-            <img
-              src={siteImages.twoPathsCourses}
-              alt="Corsi di formazione sicurezza"
-              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=1000&q=80';
-              }}
-            />
-            {/* Dark navy gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0B192C]/95 via-[#0B192C]/50 to-black/30" />
+                  <p className="text-sm text-slate-600 leading-relaxed">
+                    {card.description}
+                  </p>
+                </div>
 
-            {/* Top row: badge & arrow */}
-            <div className="absolute top-6 inset-x-6 flex items-center justify-between">
-              <span className="px-3.5 py-1 rounded-full text-xs font-bold tracking-wider uppercase bg-[#1E3E62] text-white border border-slate-400/40 shadow-md">
-                FORMAZIONE ACCREDITATA
-              </span>
-              <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/30 group-hover:bg-[#0A66C2] group-hover:border-[#0A66C2] group-hover:text-white transition-all">
-                <ArrowUpRight className="w-5 h-5" />
-              </div>
-            </div>
+                <div className="pt-6 mt-6 border-t border-slate-100 flex items-center justify-between">
+                  <button
+                    onClick={card.onClick}
+                    className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-[#1B4332] hover:text-[#143326] transition-colors cursor-pointer group-hover:underline"
+                  >
+                    <span>{card.actionLabel}</span>
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </button>
 
-            {/* Bottom Content */}
-            <div className="absolute bottom-6 inset-x-6 text-white space-y-2.5">
-              <span className="text-xs font-semibold text-[#70B5F9] uppercase tracking-wider">
-                Catalogo 40+ Corsi • Aula, E-learning & Aziendale
-              </span>
-              <h3 className="font-serif-display text-2xl sm:text-3xl font-bold">
-                Cerchi un corso o aggiornamento?
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-300 line-clamp-2">
-                RSPP, RLS, Antincendio Livello 1-2-3, Primo Soccorso, Carrellisti, PLE e percorsi Nuovo Accordo 2026.
-              </p>
-              <div className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-[#70B5F9] group-hover:text-white transition-colors pt-1">
-                <span>Consulta il catalogo completo</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1.5 transition-transform" />
-              </div>
-            </div>
-          </div>
+                  <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded">
+                    {card.tag}
+                  </span>
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
       </div>
     </section>

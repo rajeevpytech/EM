@@ -18,8 +18,8 @@ export const Logo: React.FC<LogoProps> = ({
 }) => {
   const isLight = variant === 'light'; // light logo for dark backgrounds
   const mainColor = isLight ? '#FFFFFF' : '#0B192C';
-  const accentColor = isLight ? '#60A5FA' : '#0A66C2';
-  const subtitleColor = isLight ? '#93C5FD' : '#334155';
+  const accentColor = isLight ? '#74C69D' : '#1B4332';
+  const subtitleColor = isLight ? '#D8F3DC' : '#475569';
 
   // If admin has set a custom image URL or there's a stored one, use that image
   const effectiveLogoUrl = customLogoUrl || getStoredImages().headerLogoUrl;

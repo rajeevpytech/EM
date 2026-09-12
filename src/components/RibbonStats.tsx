@@ -5,14 +5,14 @@ export const RibbonStats: React.FC = () => {
   const { siteInfo } = useAdminStore();
 
   const topics = [
-    'SICUREZZA SUL LAVORO',
     'D.LGS. 81/08',
     'FORMAZIONE RSPP',
-    'ANTINCENDIO & EMERGENZE',
+    'ANTINCENDIO',
     'PRIMO SOCCORSO',
-    'SISTEMI ISO 45001',
-    'MODELLO D.LGS 231/01',
-    'NUOVO ACCORDO STATO-REGIONI 2026',
+    'DVR E VALUTAZIONE RISCHI',
+    'HACCP',
+    'FORMAZIONE AZIENDALE',
+    'SICUREZZA SUL LAVORO',
   ];
 
   const stats = [
