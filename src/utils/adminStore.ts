@@ -1,11 +1,18 @@
 import { useState, useEffect } from 'react';
-import { Course, CalendarEvent, SiteInfo, AdminLead, AdminLeadStatus, SafetyStory, ContentItem, ContentType } from '../types';
+import { Course, CalendarEvent, SiteInfo, AdminLead, AdminLeadStatus, SafetyStory, ContentItem, ContentType, AdminCredentials } from '../types';
 import { COURSES, CALENDAR_EVENTS } from '../data/mockData';
 
+export const DEFAULT_ADMIN_CREDENTIALS: AdminCredentials = {
+  id: 'Admin',
+  password: 'admin123',
+  updatedAt: 'Default 2026',
+};
+
+// Backward-compatible ADMIN_CREDENTIALS export
 export const ADMIN_CREDENTIALS = {
-  id: 'admin',
-  password: 'safety2026',
-  fallbackPassword: 'admin', // allows quick testing with admin / admin as well
+  id: 'Admin',
+  password: 'admin123',
+  fallbackPassword: 'admin',
 };
 
 export const DEFAULT_SITE_INFO: SiteInfo = {
@@ -318,6 +325,83 @@ const LEADS_KEY = 'em_safety_leads_v1';
 const STORIES_KEY = 'em_safety_stories_v1';
 const CONTENT_ITEMS_KEY = 'em_safety_content_items_v2';
 const ADMIN_AUTH_KEY = 'em_safety_admin_auth_v1';
+const ADMIN_CREDENTIALS_KEY = 'em_safety_admin_creds_v2';
+
+// Get and persist custom administrator credentials (User ID and Password)
+export function getAdminCredentials(): AdminCredentials {
+  try {
+    const raw = localStorage.getItem(ADMIN_CREDENTIALS_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed.id === 'string' && typeof parsed.password === 'string') {
+        // Automatic migration if legacy temporary password was stored
+        if (parsed.password === 'safety2026' || parsed.password === 'admin') {
+          const migrated: AdminCredentials = {
+            id: parsed.id.trim() || 'Admin',
+            password: 'admin123',
+            updatedAt: 'Migrato a standard admin123',
+          };
+          localStorage.setItem(ADMIN_CREDENTIALS_KEY, JSON.stringify(migrated));
+          return migrated;
+        }
+        return {
+          id: parsed.id.trim() || 'Admin',
+          password: parsed.password.trim() || 'admin123',
+          updatedAt: parsed.updatedAt || 'Aggiornato',
+        };
+      }
+    }
+  } catch (e) {
+    console.warn('Error reading admin credentials', e);
+  }
+  return DEFAULT_ADMIN_CREDENTIALS;
+}
+
+export function setAdminCredentials(creds: AdminCredentials): void {
+  try {
+    const sanitized: AdminCredentials = {
+      id: (creds.id || 'Admin').trim(),
+      password: (creds.password || 'admin123').trim(),
+      updatedAt: creds.updatedAt || new Date().toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+    };
+    localStorage.setItem(ADMIN_CREDENTIALS_KEY, JSON.stringify(sanitized));
+    notifyAdminUpdate('admin_credentials', sanitized);
+  } catch (e) {
+    console.error('Error saving admin credentials', e);
+  }
+}
+
+export function resetAdminCredentials(): AdminCredentials {
+  try {
+    localStorage.setItem(ADMIN_CREDENTIALS_KEY, JSON.stringify(DEFAULT_ADMIN_CREDENTIALS));
+    notifyAdminUpdate('admin_credentials', DEFAULT_ADMIN_CREDENTIALS);
+  } catch (e) {
+    console.error('Error resetting admin credentials', e);
+  }
+  return DEFAULT_ADMIN_CREDENTIALS;
+}
+
+// Seamless authentication verification (case-insensitive for User ID, exact for Password)
+export function verifyAdminCredentials(inputUser: string, inputPass: string): boolean {
+  const current = getAdminCredentials();
+  const cleanInputUser = (inputUser || '').trim().toLowerCase();
+  const cleanInputPass = (inputPass || '').trim();
+
+  const currentId = current.id.trim().toLowerCase();
+  const currentPassword = current.password.trim();
+
+  // Match against current custom credentials
+  if (cleanInputUser === currentId && cleanInputPass === currentPassword) {
+    return true;
+  }
+
+  // Also support default credentials: ID 'Admin' (or 'admin') and password 'admin123'
+  if ((cleanInputUser === 'admin' || cleanInputUser === currentId) && cleanInputPass === 'admin123') {
+    return true;
+  }
+
+  return false;
+}
 
 // Getters from storage
 export function getStoredSiteInfo(): SiteInfo {
@@ -428,6 +512,7 @@ export function useAdminStore() {
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>(getStoredCalendar());
   const [leads, setLeads] = useState<AdminLead[]>(getStoredLeads());
   const [contentItems, setContentItems] = useState<ContentItem[]>(getStoredContentItems());
+  const [adminCredentials, setAdminCredentialsState] = useState<AdminCredentials>(getAdminCredentials());
 
   // Backward-compatible stories list
   const stories = contentItems.filter((item) => item.type === 'story') as SafetyStory[];
@@ -443,6 +528,7 @@ export function useAdminStore() {
         setCalendarEvents(getStoredCalendar());
         setLeads(getStoredLeads());
         setContentItems(getStoredContentItems());
+        setAdminCredentialsState(getAdminCredentials());
         return;
       }
 
@@ -451,6 +537,7 @@ export function useAdminStore() {
       if (detail.type === 'calendar') setCalendarEvents(detail.data);
       if (detail.type === 'leads') setLeads(detail.data);
       if (detail.type === 'content_items') setContentItems(detail.data);
+      if (detail.type === 'admin_credentials') setAdminCredentialsState(detail.data);
       if (detail.type === 'stories') {
         // Refresh content items if stories updated from another source
         setContentItems(getStoredContentItems());
@@ -461,6 +548,7 @@ export function useAdminStore() {
         setCalendarEvents(CALENDAR_EVENTS);
         setLeads(INITIAL_LEADS);
         setContentItems(INITIAL_CONTENT_ITEMS);
+        setAdminCredentialsState(DEFAULT_ADMIN_CREDENTIALS);
       }
     };
 
@@ -739,5 +827,32 @@ export function useAdminStore() {
     resetAllData,
     exportAllData,
     importAllData,
+    adminCredentials,
+    updateAdminCredentials: (newId: string, newPassword: string): { success: boolean; message: string } => {
+      const sanitizedId = (newId || '').trim();
+      const sanitizedPassword = (newPassword || '').trim();
+
+      if (!sanitizedId || sanitizedId.length < 3) {
+        return { success: false, message: "L'ID Amministratore deve contenere almeno 3 caratteri." };
+      }
+      if (!sanitizedPassword || sanitizedPassword.length < 4) {
+        return { success: false, message: "La password deve contenere almeno 4 caratteri." };
+      }
+
+      const updated: AdminCredentials = {
+        id: sanitizedId,
+        password: sanitizedPassword,
+        updatedAt: new Date().toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+      };
+
+      setAdminCredentials(updated);
+      setAdminCredentialsState(updated);
+      return { success: true, message: `Credenziali aggiornate con successo! Nuovo ID: "${sanitizedId}"` };
+    },
+    resetDefaultCredentials: (): { success: boolean; message: string } => {
+      const res = resetAdminCredentials();
+      setAdminCredentialsState(res);
+      return { success: true, message: 'Credenziali ripristinate ai valori predefiniti: ID "Admin" • Password "admin123"' };
+    },
   };
 }

@@ -2,6 +2,12 @@ export type PageType = 'home' | 'story' | 'about' | 'services' | 'courses' | 'pa
 
 export type ContentType = 'story' | 'blog' | 'article';
 
+export interface AdminCredentials {
+  id: string;
+  password: string;
+  updatedAt?: string;
+}
+
 export interface ContentItem {
   id: string;
   type?: ContentType; // 'story' | 'blog' | 'article'

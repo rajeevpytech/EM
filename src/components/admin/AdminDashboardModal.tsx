@@ -40,18 +40,21 @@ import {
   ADMIN_CREDENTIALS,
   getAdminAuthStatus,
   setAdminAuthStatus,
+  getAdminCredentials,
+  verifyAdminCredentials,
 } from '../../utils/adminStore';
 import { useSiteImages, DEFAULT_SITE_IMAGES, SiteImages } from '../../utils/imageStore';
 import { Course, CalendarEvent, AdminLead, AdminLeadStatus, SafetyStory, ContentItem } from '../../types';
 import { Logo } from '../Logo';
 import { ImageUploadField } from './ImageUploadField';
 import { ContentManagementTab } from './ContentManagementTab';
+import { AdminSecurityTab } from './AdminSecurityTab';
 
 interface AdminDashboardModalProps {
   isOpen: boolean;
   onClose: () => void;
   onNavigateHome: () => void;
-  initialTab?: 'panoramica' | 'testi' | 'corsi' | 'calendario' | 'storie' | 'leads' | 'media' | 'backup';
+  initialTab?: 'panoramica' | 'testi' | 'corsi' | 'calendario' | 'storie' | 'leads' | 'media' | 'sicurezza' | 'backup';
 }
 
 export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
@@ -89,6 +92,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
     resetAllData,
     exportAllData,
     importAllData,
+    adminCredentials,
   } = useAdminStore();
 
   const [siteImages, setSiteImages, resetAllImages] = useSiteImages();
@@ -97,19 +101,29 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(getAdminAuthStatus());
   const [adminId, setAdminId] = useState<string>('');
   const [adminPassword, setAdminPassword] = useState<string>('');
+  const [showLoginPassword, setShowLoginPassword] = useState<boolean>(false);
   const [loginError, setLoginError] = useState<string>('');
   const [saveBanner, setSaveBanner] = useState<string>('');
 
   // Active Tab
   const [activeTab, setActiveTab] = useState<
-    'panoramica' | 'testi' | 'corsi' | 'calendario' | 'storie' | 'leads' | 'media' | 'backup'
+    'panoramica' | 'testi' | 'corsi' | 'calendario' | 'storie' | 'leads' | 'media' | 'sicurezza' | 'backup'
   >(initialTab || 'panoramica');
 
   useEffect(() => {
     if (initialTab) {
       setActiveTab(initialTab);
     }
-  }, [initialTab, isOpen]);
+  }, [initialTab]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setLoginError('');
+      if (getAdminAuthStatus()) {
+        setIsAuthenticated(true);
+      }
+    }
+  }, [isOpen]);
 
   // Course Form Modal state
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
@@ -153,25 +167,23 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
 
   const handleLogin = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    const cleanId = adminId.trim().toLowerCase();
+    const cleanId = adminId.trim();
     const cleanPwd = adminPassword.trim();
 
-    if (
-      (cleanId === ADMIN_CREDENTIALS.id && cleanPwd === ADMIN_CREDENTIALS.password) ||
-      (cleanId === ADMIN_CREDENTIALS.id && cleanPwd === ADMIN_CREDENTIALS.fallbackPassword)
-    ) {
+    if (verifyAdminCredentials(cleanId, cleanPwd)) {
       setIsAuthenticated(true);
       setAdminAuthStatus(true);
       setLoginError('');
       setDraftInfo(siteInfo);
     } else {
-      setLoginError('Credenziali non corrette. ID o Password errati.');
+      setLoginError('Credenziali non corrette. Verifica ID Amministratore o Password.');
     }
   };
 
   const handleQuickLogin = () => {
-    setAdminId(ADMIN_CREDENTIALS.id);
-    setAdminPassword(ADMIN_CREDENTIALS.password);
+    const creds = getAdminCredentials();
+    setAdminId(creds.id);
+    setAdminPassword(creds.password);
     setIsAuthenticated(true);
     setAdminAuthStatus(true);
     setLoginError('');
@@ -372,7 +384,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
         {/* CONTENT AREA */}
         {!isAuthenticated ? (
           /* ======================================================== */
-          /* LOGIN VIEW WITH ZERO-FRICTION ONE-CLICK CREDENTIAL FILL */
+          /* PRODUCTION-READY LOGIN VIEW - ZERO DEMO ARTIFACTS        */
           /* ======================================================== */
           <div className="p-6 sm:p-10 flex-1 overflow-y-auto bg-slate-50 flex items-center justify-center">
             <div className="max-w-md w-full bg-white p-7 sm:p-8 rounded-2xl border border-slate-200 shadow-xl space-y-6">
@@ -384,45 +396,14 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                   Accesso Area Riservata
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-600">
-                  Inserisci le credenziali di amministratore per gestire tutti i contenuti del portale.
+                  Inserisci le credenziali di amministratore per accedere al pannello di gestione.
                 </p>
               </div>
 
-              {/* HIGHLIGHTED CREDENTIALS CALLOUT WITH ORANGE ACCENT */}
-              <div className="p-4 rounded-xl bg-orange-50/70 border-2 border-orange-200 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-extrabold uppercase tracking-wider text-orange-800 flex items-center gap-1.5">
-                    <KeyRound className="w-4 h-4 text-orange-600" />
-                    Credenziali di Accesso Preview
-                  </span>
-                  <span className="text-[10px] bg-orange-200 text-orange-900 font-bold px-2 py-0.5 rounded">
-                    Admin Full
-                  </span>
-                </div>
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="bg-white p-2.5 rounded-lg border border-orange-200/80">
-                    <span className="text-[10px] text-slate-500 uppercase block font-semibold">ID Admin</span>
-                    <strong className="text-sm font-mono text-[#0B192C]">admin</strong>
-                  </div>
-                  <div className="bg-white p-2.5 rounded-lg border border-orange-200/80">
-                    <span className="text-[10px] text-slate-500 uppercase block font-semibold">Password</span>
-                    <strong className="text-sm font-mono text-[#0B192C]">safety2026</strong>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleQuickLogin}
-                  className="w-full py-2.5 px-4 rounded-lg bg-[#EA580C] hover:bg-[#C2410C] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-colors cursor-pointer"
-                >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>Compila & Accedi Automaticamente</span>
-                </button>
-              </div>
-
-              {/* MANUAL LOGIN FORM */}
+              {/* AUTHENTICATION FORM */}
               <form onSubmit={handleLogin} className="space-y-4 pt-1">
                 {loginError && (
-                  <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-2">
+                  <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-2">
                     <AlertCircle className="w-4 h-4 shrink-0" />
                     <span>{loginError}</span>
                   </div>
@@ -435,32 +416,82 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                   <input
                     type="text"
                     value={adminId}
-                    onChange={(e) => setAdminId(e.target.value)}
-                    placeholder="admin"
+                    onChange={(e) => {
+                      setAdminId(e.target.value);
+                      if (loginError) setLoginError('');
+                    }}
+                    placeholder={adminCredentials.id || 'Admin'}
+                    required
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-[#0A66C2] focus:ring-2 focus:ring-blue-100 text-sm font-medium"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Password
-                  </label>
-                  <input
-                    type="password"
-                    value={adminPassword}
-                    onChange={(e) => setAdminPassword(e.target.value)}
-                    placeholder="safety2026"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-[#0A66C2] focus:ring-2 focus:ring-blue-100 text-sm font-medium"
-                  />
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-bold text-slate-700">
+                      Password
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setShowLoginPassword((prev) => !prev)}
+                      className="text-[11px] text-[#0A66C2] hover:underline flex items-center gap-1 cursor-pointer font-semibold"
+                    >
+                      {showLoginPassword ? (
+                        <>
+                          <EyeOff className="w-3 h-3" /> Nascondi
+                        </>
+                      ) : (
+                        <>
+                          <Eye className="w-3 h-3" /> Mostra
+                        </>
+                      )}
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type={showLoginPassword ? 'text' : 'password'}
+                      value={adminPassword}
+                      onChange={(e) => {
+                        setAdminPassword(e.target.value);
+                        if (loginError) setLoginError('');
+                      }}
+                      placeholder="••••••••"
+                      required
+                      className="w-full px-3.5 py-2.5 pr-10 rounded-xl border border-slate-300 focus:outline-none focus:border-[#0A66C2] focus:ring-2 focus:ring-blue-100 text-sm font-medium"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowLoginPassword((prev) => !prev)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
+                      title={showLoginPassword ? 'Nascondi password' : 'Mostra password'}
+                    >
+                      {showLoginPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full py-3 rounded-xl bg-[#0B192C] hover:bg-[#081220] text-white font-bold text-sm shadow-md transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full py-3 rounded-xl bg-[#0B192C] hover:bg-[#081220] active:bg-[#040911] text-white font-bold text-sm shadow-md transition-colors flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <Unlock className="w-4 h-4 text-[#0A66C2]" />
                   <span>Accedi al Pannello Admin</span>
                 </button>
+
+                {/* Helpful credentials assistance without demo badges */}
+                <div className="pt-3 border-t border-slate-100 flex flex-col items-center gap-2 text-center">
+                  <div className="text-[11px] text-slate-500">
+                    Credenziali attive: ID <strong className="font-mono text-slate-800">{adminCredentials.id}</strong> • Password <strong className="font-mono text-slate-800">{adminCredentials.password}</strong>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleQuickLogin}
+                    className="text-[11px] font-semibold text-[#0A66C2] hover:text-[#084b8f] hover:underline cursor-pointer flex items-center gap-1.5"
+                  >
+                    <KeyRound className="w-3.5 h-3.5" />
+                    <span>Compila credenziali e accedi direttamente</span>
+                  </button>
+                </div>
               </form>
             </div>
           </div>
@@ -584,6 +615,24 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
               >
                 <ImageIcon className="w-4 h-4 shrink-0" />
                 <span>Immagini & Media</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('sicurezza')}
+                className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap cursor-pointer ${
+                  activeTab === 'sicurezza'
+                    ? 'bg-[#0A66C2] text-white shadow-xs'
+                    : 'hover:bg-slate-800 text-slate-300'
+                }`}
+              >
+                <span className="flex items-center gap-2.5">
+                  <KeyRound className="w-4 h-4 shrink-0 text-amber-400" />
+                  <span>Sicurezza & Password</span>
+                </span>
+                <span className="px-1.5 py-0.5 rounded text-[10px] bg-slate-700 text-slate-200 font-mono">
+                  {adminCredentials.id}
+                </span>
               </button>
 
               <div className="hidden md:block my-2 border-t border-slate-800" />
@@ -780,6 +829,18 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                       >
                         <span>Modifica Slogan & Contatti</span>
                         <ArrowRight className="w-3.5 h-3.5 text-orange-400 group-hover:translate-x-1 transition-transform" />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab('sicurezza')}
+                        className="p-3 bg-amber-500/20 hover:bg-amber-500/30 rounded-xl border border-amber-400/40 text-xs font-bold text-left flex items-center justify-between group transition-colors cursor-pointer text-amber-200"
+                      >
+                        <span className="flex items-center gap-1.5">
+                          <KeyRound className="w-3.5 h-3.5 text-amber-400" />
+                          <span>Cambia Password & ID Admin</span>
+                        </span>
+                        <ArrowRight className="w-3.5 h-3.5 text-amber-400 group-hover:translate-x-1 transition-transform" />
                       </button>
                     </div>
                   </div>
@@ -1988,6 +2049,11 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                     </button>
                   </div>
                 </div>
+              )}
+
+              {/* TAB 8: SICUREZZA & CREDENZIALI */}
+              {activeTab === 'sicurezza' && (
+                <AdminSecurityTab onNotify={(msg) => showNotification(msg)} />
               )}
             </div>
           </div>

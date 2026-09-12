@@ -13,8 +13,16 @@ import {
   Sliders,
   ShieldCheck,
   AlertCircle,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { SiteImages, useSiteImages, DEFAULT_SITE_IMAGES } from '../../utils/imageStore';
+import {
+  getAdminCredentials,
+  verifyAdminCredentials,
+  getAdminAuthStatus,
+  setAdminAuthStatus,
+} from '../../utils/adminStore';
 
 interface AdminImageModalProps {
   isOpen: boolean;
@@ -26,24 +34,36 @@ export const AdminImageModal: React.FC<AdminImageModalProps> = ({ isOpen, onClos
 
   // Local draft state
   const [draftImages, setDraftImages] = useState<SiteImages>(siteImages);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(getAdminAuthStatus());
 
   // Login form fields
   const [adminId, setAdminId] = useState<string>('');
   const [adminPassword, setAdminPassword] = useState<string>('');
+  const [showPassword, setShowPassword] = useState<boolean>(false);
   const [loginError, setLoginError] = useState<string>('');
   const [savedSuccess, setSavedSuccess] = useState<boolean>(false);
 
   // Active category tab in admin panel
   const [activeTab, setActiveTab] = useState<'branding' | 'hero' | 'story' | 'ssgi' | 'sections'>('branding');
 
+  React.useEffect(() => {
+    if (isOpen) {
+      setLoginError('');
+      if (getAdminAuthStatus()) {
+        setIsAuthenticated(true);
+      }
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
+
+  const currentCreds = getAdminCredentials();
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    // Default credentials: ID = admin, Password = safety2026
-    if (adminId.trim().toLowerCase() === 'admin' && adminPassword.trim() === 'safety2026') {
+    if (verifyAdminCredentials(adminId, adminPassword)) {
       setIsAuthenticated(true);
+      setAdminAuthStatus(true);
       setLoginError('');
       setDraftImages(siteImages);
     } else {
@@ -245,34 +265,71 @@ export const AdminImageModal: React.FC<AdminImageModalProps> = ({ isOpen, onClos
                     type="text"
                     required
                     value={adminId}
-                    onChange={(e) => setAdminId(e.target.value)}
-                    placeholder="admin"
+                    onChange={(e) => {
+                      setAdminId(e.target.value);
+                      if (loginError) setLoginError('');
+                    }}
+                    placeholder={currentCreds.id}
                     className="w-full px-4 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0A66C2]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                    Password di Sicurezza
-                  </label>
-                  <input
-                    type="password"
-                    required
-                    value={adminPassword}
-                    onChange={(e) => setAdminPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full px-4 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0A66C2]"
-                  />
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                      Password di Sicurezza
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((p) => !p)}
+                      className="text-[11px] text-[#0A66C2] hover:underline flex items-center gap-1 cursor-pointer font-semibold"
+                    >
+                      {showPassword ? <><EyeOff className="w-3 h-3" /> Nascondi</> : <><Eye className="w-3 h-3" /> Mostra</>}
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      required
+                      value={adminPassword}
+                      onChange={(e) => {
+                        setAdminPassword(e.target.value);
+                        if (loginError) setLoginError('');
+                      }}
+                      placeholder="••••••••"
+                      className="w-full px-4 py-2.5 pr-10 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0A66C2]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((p) => !p)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
                 </div>
 
-                {/* Helpful credentials reminder badge */}
-                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600 space-y-1">
-                  <div className="font-semibold text-[#0B192C] flex items-center gap-1.5">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Credenziali Predefinite:</span>
+                {/* Helpful credentials reminder badge with one-click fill */}
+                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="font-semibold text-[#0B192C] flex items-center gap-1.5">
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Credenziali Amministratore:</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAdminId(currentCreds.id);
+                        setAdminPassword(currentCreds.password);
+                        if (loginError) setLoginError('');
+                      }}
+                      className="text-[11px] font-bold text-[#0A66C2] hover:underline cursor-pointer"
+                    >
+                      Compila
+                    </button>
                   </div>
                   <div className="font-mono text-[11px] text-slate-700">
-                    ID: <strong className="text-[#0A66C2]">admin</strong> &bull; Password: <strong className="text-[#0A66C2]">safety2026</strong>
+                    ID: <strong className="text-[#0A66C2]">{currentCreds.id}</strong> &bull; Password: <strong className="text-[#0A66C2]">{currentCreds.password}</strong>
                   </div>
                 </div>
 
@@ -385,7 +442,7 @@ export const AdminImageModal: React.FC<AdminImageModalProps> = ({ isOpen, onClos
                     'heroSlideMilan',
                     'Visuale architettonica di Porta Nuova / Piazza Gae Aulenti',
                     [
-                      { title: 'Locale', url: '/hero-milan.jpg' },
+                      { title: 'Piazza Gae Aulenti (B&W)', url: '/hero-milan.jpg' },
                       { title: 'Skyline Milano', url: 'https://images.unsplash.com/photo-1513584684374-8bab748fbf90?auto=format&fit=crop&w=1200&q=80' },
                     ]
                   )}

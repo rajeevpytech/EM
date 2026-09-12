@@ -57,11 +57,11 @@ export default function App() {
   const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [adminInitialTab, setAdminInitialTab] = useState<
-    'panoramica' | 'testi' | 'corsi' | 'calendario' | 'storie' | 'leads' | 'media' | 'backup'
+    'panoramica' | 'testi' | 'corsi' | 'calendario' | 'storie' | 'leads' | 'media' | 'sicurezza' | 'backup'
   >('panoramica');
 
   const handleOpenAdmin = (
-    tab: 'panoramica' | 'testi' | 'corsi' | 'calendario' | 'storie' | 'leads' | 'media' | 'backup' = 'panoramica'
+    tab: 'panoramica' | 'testi' | 'corsi' | 'calendario' | 'storie' | 'leads' | 'media' | 'sicurezza' | 'backup' = 'panoramica'
   ) => {
     setAdminInitialTab(tab);
     setIsAdminOpen(true);

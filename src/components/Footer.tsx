@@ -392,13 +392,10 @@ export const Footer: React.FC<FooterProps> = ({
                 type="button"
                 onClick={onOpenAdmin}
                 className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 hover:text-white transition-colors cursor-pointer text-[11px] font-semibold"
-                title="Pannello Amministrazione (ID: admin / safety2026)"
+                title="Pannello di Amministrazione Riservato"
               >
-                <KeyRound className="w-3 h-3 text-orange-400" />
+                <KeyRound className="w-3 h-3 text-emerald-400" />
                 <span>Pannello Admin</span>
-                <span className="text-[9px] bg-orange-500/20 text-orange-400 px-1 py-0.2 rounded font-mono">
-                  ID: admin
-                </span>
               </button>
             )}
             <p className="text-slate-400 font-semibold flex items-center gap-1.5">

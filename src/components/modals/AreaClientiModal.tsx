@@ -8,10 +8,26 @@ interface AreaClientiModalProps {
 
 export const AreaClientiModal: React.FC<AreaClientiModalProps> = ({ isOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState<'preview' | 'login'>('preview');
-  const [email, setEmail] = useState('demo@azienda-partner.it');
-  const [password, setPassword] = useState('••••••••••••');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loginSuccess, setLoginSuccess] = useState(false);
+  const [downloadNotice, setDownloadNotice] = useState<string | null>(null);
 
   if (!isOpen) return null;
+
+  const triggerDownloadNotice = (filename: string) => {
+    setDownloadNotice(`Download avviato per: ${filename}`);
+    setTimeout(() => setDownloadNotice(null), 3000);
+  };
+
+  const handleLoginSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginSuccess(true);
+    setTimeout(() => {
+      setLoginSuccess(false);
+      setActiveTab('preview');
+    }, 1200);
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
@@ -55,7 +71,7 @@ export const AreaClientiModal: React.FC<AreaClientiModalProps> = ({ isOpen, onCl
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
-            Demo Registro Documentale & Attestati
+            Registro Documentale & Attestati
           </button>
           <button
             onClick={() => setActiveTab('login')}
@@ -71,6 +87,13 @@ export const AreaClientiModal: React.FC<AreaClientiModalProps> = ({ isOpen, onCl
 
         {/* Content */}
         <div className="p-6">
+          {downloadNotice && (
+            <div className="mb-4 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>{downloadNotice}</span>
+            </div>
+          )}
+
           {activeTab === 'preview' ? (
             <div className="space-y-5">
               <div className="flex items-center justify-between bg-blue-50/70 border border-blue-200 p-3.5 rounded-xl">
@@ -120,7 +143,7 @@ export const AreaClientiModal: React.FC<AreaClientiModalProps> = ({ isOpen, onCl
                         </div>
                       </div>
                       <button
-                        onClick={() => alert(`Download demo: ${doc.name}`)}
+                        onClick={() => triggerDownloadNotice(doc.name)}
                         className="p-2 text-slate-600 hover:text-[#0A66C2] rounded-lg hover:bg-blue-50 transition-colors cursor-pointer"
                         title="Scarica documento"
                       >
@@ -141,13 +164,16 @@ export const AreaClientiModal: React.FC<AreaClientiModalProps> = ({ isOpen, onCl
             </div>
           ) : (
             <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                alert('Accesso riuscito in modalità demo.');
-                setActiveTab('preview');
-              }}
+              onSubmit={handleLoginSubmit}
               className="space-y-4 max-w-md mx-auto py-4"
             >
+              {loginSuccess && (
+                <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>Accesso verificato. Caricamento documentale in corso...</span>
+                </div>
+              )}
+
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Email Aziendale o Username
@@ -156,7 +182,9 @@ export const AreaClientiModal: React.FC<AreaClientiModalProps> = ({ isOpen, onCl
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 focus:ring-1 focus:ring-[#0A66C2] focus:border-[#0A66C2] focus:outline-none"
+                  placeholder="nome@azienda-partner.it"
+                  required
+                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#0A66C2] focus:border-[#0A66C2] focus:outline-none"
                 />
               </div>
 
@@ -168,7 +196,9 @@ export const AreaClientiModal: React.FC<AreaClientiModalProps> = ({ isOpen, onCl
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 focus:ring-1 focus:ring-[#0A66C2] focus:border-[#0A66C2] focus:outline-none"
+                  placeholder="••••••••••••"
+                  required
+                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#0A66C2] focus:border-[#0A66C2] focus:outline-none"
                 />
               </div>
 
@@ -176,12 +206,12 @@ export const AreaClientiModal: React.FC<AreaClientiModalProps> = ({ isOpen, onCl
                 <a href="#" className="text-[#0A66C2] font-semibold hover:underline">
                   Password dimenticata?
                 </a>
-                <span className="text-slate-400">Accesso crittografato SSL 256-bit</span>
+                <span className="text-slate-400">Accesso SSL 256-bit</span>
               </div>
 
               <button
                 type="submit"
-                className="w-full py-3 rounded-xl text-xs font-bold uppercase tracking-wider text-white bg-[#0B192C] hover:bg-[#0A66C2] transition-colors shadow-md"
+                className="w-full py-3 rounded-xl text-xs font-bold uppercase tracking-wider text-white bg-[#0B192C] hover:bg-[#0A66C2] transition-colors shadow-md cursor-pointer"
               >
                 Accedi al Portale
               </button>

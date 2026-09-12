@@ -127,29 +127,16 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   />
 
                   {/* Gradient Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#0B192C]/80 via-transparent to-black/20 pointer-events-none" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0B192C]/90 via-black/20 to-transparent pointer-events-none" />
 
                   {/* Top Location Badge */}
-                  <div className="absolute top-3.5 left-3.5 flex items-center gap-2 pointer-events-none">
+                  <div className="absolute top-3.5 left-3.5 flex items-center gap-2 pointer-events-none z-10">
                     <span className="px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider rounded-md bg-[#1B4332] text-white shadow-sm flex items-center gap-1.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
                       SEDE DIREZIONALE
                     </span>
                     <span className="px-2 py-1 text-[10px] font-bold rounded-md bg-black/60 backdrop-blur-md text-white border border-white/20">
                       Milano • Piazza Gae Aulenti
-                    </span>
-                  </div>
-
-                  {/* Floating White D.Lgs 81/08 Badge matching reference */}
-                  <div className="absolute bottom-3 right-3 bg-white/95 backdrop-blur-md rounded-xl px-4 py-2.5 shadow-xl border border-slate-200 text-left pointer-events-none z-10">
-                    <span className="block text-[9px] font-extrabold uppercase tracking-wider text-[#1B4332]">
-                      SICUREZZA SUL LAVORO
-                    </span>
-                    <span className="block text-sm font-bold text-[#0B192C] leading-tight">
-                      D.Lgs. 81/08
-                    </span>
-                    <span className="block text-[10px] text-slate-500 font-medium">
-                      Consulenza DVR • RSPP • Formazione
                     </span>
                   </div>
 
@@ -175,18 +162,21 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                     </motion.button>
                   )}
 
-                  {/* Bottom Text in Main Image */}
-                  <div className="absolute bottom-3 inset-x-3 text-white flex items-center justify-between">
+                  {/* Bottom Banner in Main Image - SICUREZZA SUL LAVORO • D.LGS. 81/08 */}
+                  <div className="absolute bottom-0 inset-x-0 p-4 sm:p-5 bg-gradient-to-t from-[#0B192C]/95 via-[#0B192C]/75 to-transparent text-white flex flex-col sm:flex-row sm:items-end justify-between gap-3 z-10">
                     <div>
-                      <p className="text-xs font-extrabold uppercase tracking-wider text-[#E5A93C]">
-                        SICUREZZA SUL LAVORO • D.LGS. 81/08
-                      </p>
-                      <p className="text-sm font-bold text-white leading-tight">
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-[#E5A93C]/20 border border-[#E5A93C]/40 text-[#E5A93C] text-[10px] sm:text-[11px] font-black uppercase tracking-wider mb-1">
+                        <span>SICUREZZA SUL LAVORO • D.LGS. 81/08</span>
+                      </div>
+                      <h2 className="text-sm sm:text-base lg:text-lg font-bold text-white tracking-tight leading-snug">
                         Ingegneria HSE & Sistemi di Gestione SGI
+                      </h2>
+                      <p className="text-[11px] text-slate-300 font-medium">
+                        Consulenza DVR • RSPP • Sistemi ISO 45001 • Formazione Accreditata
                       </p>
                     </div>
-                    <div className="flex items-center gap-1 bg-white/15 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/20 text-xs font-semibold">
-                      <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                    <div className="flex items-center gap-1.5 bg-white/15 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/20 text-xs font-semibold shrink-0 self-start sm:self-auto">
+                      <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
                       <span>100% Conforme</span>
                     </div>
                   </div>
