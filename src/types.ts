@@ -1,4 +1,4 @@
-export type PageType = 'home' | 'story' | 'about' | 'services' | 'courses' | 'partner' | 'careers' | 'testimonials' | 'contact';
+export type PageType = 'home' | 'story' | 'about' | 'services' | 'courses' | 'tools' | 'partner' | 'careers' | 'testimonials' | 'contact';
 
 export type ContentType = 'story' | 'blog' | 'article';
 

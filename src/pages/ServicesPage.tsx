@@ -20,6 +20,9 @@ import {
   Clock,
   HelpCircle,
 } from 'lucide-react';
+import { IntegratedSystemsSection } from '../components/IntegratedSystemsSection';
+import { FourPhaseProcessSection } from '../components/FourPhaseProcessSection';
+import { ServiceArchitectureSection } from '../components/ServiceArchitectureSection';
 
 interface ServicesPageProps {
   onNavigateHome: () => void;
@@ -369,6 +372,21 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({
           </div>
         </div>
       </section>
+
+      {/* Sistemi di Gestione Integrati (SGI 01, 02, 03, 04) */}
+      <IntegratedSystemsSection
+        onOpenConsultation={() => onOpenQuote('Richiesta Audit Sistemi di Gestione Integrati (SGI)')}
+      />
+
+      {/* Metodo di lavoro in 4 fasi */}
+      <FourPhaseProcessSection
+        onSelectPhaseAction={(phaseTitle) => onOpenQuote(`Richiesta Attivazione Metodologia: ${phaseTitle}`)}
+      />
+
+      {/* Architettura dei servizi per comparto industriale */}
+      <ServiceArchitectureSection
+        onSelectSectorAction={(sectorName) => onOpenQuote(`Richiesta Consulenza Specifica Comparto: ${sectorName}`)}
+      />
 
       {/* Bottom CTA Banner */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">

@@ -162,6 +162,15 @@ export const PAGE_SEO_CONFIG: Record<PageType, PageMeta> = {
     ogType: 'website',
     twitterCard: 'summary_large_image',
   },
+  tools: {
+    title: 'Strumenti & Diagnostica Interattiva D.Lgs. 81/08 & INAIL — E.M. Safety',
+    description:
+      'Strumenti diagnostici interattivi gratuiti: Simulatore Obblighi & Sanzioni 2026, Ispezione DPI e Presidi di Campo, Calcolatore Costo Non Conformità e Radar SGI ISO 45001.',
+    keywords:
+      'simulatore sanzioni 81/08, calcolatore obblighi sicurezza, ispezione dpi, sanzioni inail ot23, radar conformita iso 45001',
+    ogType: 'website',
+    twitterCard: 'summary_large_image',
+  },
   contact: {
     title: 'Contatti & Sedi Operative (Milano & Treviso) — E.M. Safety',
     description:

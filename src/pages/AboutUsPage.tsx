@@ -18,6 +18,8 @@ import {
 import { AnfosLogo } from '../components/affiliations/AnfosLogo';
 import { OpnLogo } from '../components/affiliations/OpnLogo';
 import { DanLogo } from '../components/affiliations/DanLogo';
+import { PartnershipOrbitSection } from '../components/PartnershipOrbitSection';
+import { AffiliationsSection } from '../components/AffiliationsSection';
 
 interface AboutUsPageProps {
   onNavigateHome: () => void;
@@ -348,6 +350,12 @@ export const AboutUsPage: React.FC<AboutUsPageProps> = ({
           </div>
         </div>
       </section>
+
+      {/* Rete di Partnership Istituzionali & Tecniche */}
+      <PartnershipOrbitSection />
+
+      {/* Affiliazioni Ufficiali ANFOS • OPN • DAN */}
+      <AffiliationsSection onLearnMore={onOpenContact} />
 
       {/* CTA Box */}
       <section className="py-12 bg-[#0B192C] text-white">

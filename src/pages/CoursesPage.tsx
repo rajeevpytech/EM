@@ -18,7 +18,8 @@ import {
   KeyRound,
 } from 'lucide-react';
 import { useAdminStore } from '../utils/adminStore';
-import { Course } from '../types';
+import { Course, CalendarEvent } from '../types';
+import { CalendarSection } from '../components/CalendarSection';
 
 interface CoursesPageProps {
   onNavigateHome: () => void;
@@ -26,6 +27,7 @@ interface CoursesPageProps {
   onOpenQuote: (courseTitle?: string) => void;
   onOpenAdmin?: () => void;
   onSelectCourse?: (course: Course) => void;
+  onBookSeat?: (event: CalendarEvent) => void;
 }
 
 export const CoursesPage: React.FC<CoursesPageProps> = ({
@@ -34,6 +36,7 @@ export const CoursesPage: React.FC<CoursesPageProps> = ({
   onOpenQuote,
   onOpenAdmin,
   onSelectCourse,
+  onBookSeat,
 }) => {
   const { courses } = useAdminStore();
   const [searchQuery, setSearchQuery] = useState('');
@@ -310,6 +313,18 @@ export const CoursesPage: React.FC<CoursesPageProps> = ({
           </div>
         )}
       </section>
+
+      {/* Calendar Section: Prossime edizioni in partenza */}
+      <CalendarSection
+        onContactClick={onOpenContact}
+        onBookSeat={(event) => {
+          if (onBookSeat) {
+            onBookSeat(event);
+          } else {
+            onOpenQuote(`Prenotazione Posto Corso: [${event.courseCode}] ${event.title} - Sede: ${event.location} (${event.date})`);
+          }
+        }}
+      />
 
       {/* Corporate Customized Training Banner */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
